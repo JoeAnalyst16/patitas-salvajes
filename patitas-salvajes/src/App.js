@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, Star, Loader, Image as ImageIcon } from "lucide-react";
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { 
+  Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, 
+  AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, 
+  Star, Loader, Image as ImageIcon, Search, Filter
+} from "lucide-react";
+import { 
+  collection, addDoc, getDocs, deleteDoc, doc, 
+  updateDoc, onSnapshot, query, orderBy 
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./firebase";
 
@@ -10,6 +17,8 @@ function App() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -25,6 +34,7 @@ function App() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
 
   const ADMIN_KEY = "Patitassalvajes1996*";
 
@@ -37,58 +47,152 @@ function App() {
     { id: "higiene", name: "Higiene" }
   ];
 
+  // Notificaciones automáticas
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
+
   // Cargar productos desde Firestore en tiempo real
   useEffect(() => {
     const productsCollection = collection(db, "products");
-    const unsubscribe = onSnapshot(productsCollection, (querySnapshot) => {
-      const productsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setProducts(productsData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error al cargar los productos:", error);
-      setLoading(false);
-    });
+    const q = query(productsCollection, orderBy("name", "asc"));
+    
+    const unsubscribe = onSnapshot(q, 
+      (querySnapshot) => {
+        const productsData = querySnapshot.docs.map((doc) => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        setProducts(productsData);
+        setLoading(false);
+      }, 
+      (error) => {
+        console.error("Error al cargar los productos:", error);
+        setNotification({ 
+          show: true, 
+          message: "Error al cargar productos", 
+          type: "error" 
+        });
+        setLoading(false);
+      }
+    );
+    
     return () => unsubscribe();
   }, []);
 
-  const handleImageUpload = async (file) => {
+  // Función optimizada para subir imagen
+  const handleImageUpload = useCallback(async (file) => {
     if (!file) return;
-
-    try {
-      const storageRef = ref(storage, `images/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const imageUrl = await getDownloadURL(storageRef);
-      setFormData({ ...formData, image: imageUrl });
-    } catch (error) {
-      console.error("Error al subir la imagen:", error);
+    
+    // Validar tipo y tamaño
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setNotification({ 
+        show: true, 
+        message: "Por favor sube una imagen válida (JPG, PNG, GIF, WEBP)", 
+        type: "error" 
+      });
+      return;
     }
-  };
-
-  const handleDeleteImage = async () => {
-    const imageRef = ref(storage, formData.image);
-    try {
-      await deleteObject(imageRef);
-      setFormData({ ...formData, image: "" });
-    } catch (error) {
-      console.error("Error al eliminar la imagen:", error);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.price) {
-      alert("Por favor completa todos los campos obligatorios");
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      setNotification({ 
+        show: true, 
+        message: "La imagen no debe superar los 5MB", 
+        type: "error" 
+      });
       return;
     }
 
+    setUploading(true);
     try {
+      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+      const storageRef = ref(storage, `images/${fileName}`);
+      await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(storageRef);
+      setFormData(prev => ({ ...prev, image: imageUrl }));
+      setNotification({ 
+        show: true, 
+        message: "Imagen subida correctamente", 
+        type: "success" 
+      });
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      setNotification({ 
+        show: true, 
+        message: "Error al subir la imagen", 
+        type: "error" 
+      });
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const handleDeleteImage = useCallback(async () => {
+    if (!formData.image) return;
+    
+    try {
+      const imageRef = ref(storage, formData.image);
+      await deleteObject(imageRef);
+      setFormData(prev => ({ ...prev, image: "" }));
+      setNotification({ 
+        show: true, 
+        message: "Imagen eliminada", 
+        type: "success" 
+      });
+    } catch (error) {
+      console.error("Error al eliminar la imagen:", error);
+      setFormData(prev => ({ ...prev, image: "" }));
+    }
+  }, [formData.image]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.price) {
+      setNotification({ 
+        show: true, 
+        message: "Por favor completa todos los campos obligatorios", 
+        type: "error" 
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const productData = {
+        ...formData,
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock) || 0,
+        updatedAt: new Date().toISOString()
+      };
+
       if (editingProduct) {
-        const productDoc = doc(db, "products", editingProduct.id);
-        await updateDoc(productDoc, formData);
+        await updateDoc(doc(db, "products", editingProduct.id), productData);
+        setNotification({ 
+          show: true, 
+          message: "Producto actualizado correctamente", 
+          type: "success" 
+        });
       } else {
-        await addDoc(collection(db, "products"), { ...formData });
+        await addDoc(collection(db, "products"), {
+          ...productData,
+          createdAt: new Date().toISOString()
+        });
+        setNotification({ 
+          show: true, 
+          message: "Producto creado correctamente", 
+          type: "success" 
+        });
       }
 
+      // Resetear formulario
       setFormData({
         name: "",
         price: "",
@@ -102,44 +206,72 @@ function App() {
       setShowForm(false);
     } catch (error) {
       console.error("Error al guardar el producto:", error);
+      setNotification({ 
+        show: true, 
+        message: "Error al guardar el producto", 
+        type: "error" 
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = useCallback((product) => {
     setFormData({
-      name: product.name,
-      price: product.price,
-      description: product.description,
+      name: product.name || "",
+      price: product.price || "",
+      description: product.description || "",
       image: product.image || "",
       stock: product.stock || 0,
-      inStock: product.inStock,
+      inStock: product.inStock !== false,
       category: product.category || "alimento"
     });
     setEditingProduct(product);
     setShowForm(true);
     setCurrentPage("productos");
-  };
+    window.scrollTo(0, 0);
+  }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Seguro que quieres eliminar este producto?")) {
+  const handleDelete = useCallback(async (id, productName) => {
+    if (window.confirm(`¿Estás seguro de eliminar "${productName}"?`)) {
       try {
         await deleteDoc(doc(db, "products", id));
+        setNotification({ 
+          show: true, 
+          message: "Producto eliminado", 
+          type: "success" 
+        });
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
+        setNotification({ 
+          show: true, 
+          message: "Error al eliminar el producto", 
+          type: "error" 
+        });
       }
     }
-  };
+  }, []);
 
-  const toggleStock = async (id, currentStock) => {
+  const toggleStock = useCallback(async (id, currentStock) => {
     try {
-      const productDoc = doc(db, "products", id);
-      await updateDoc(productDoc, {
+      await updateDoc(doc(db, "products", id), {
         inStock: !currentStock,
+        updatedAt: new Date().toISOString()
+      });
+      setNotification({ 
+        show: true, 
+        message: `Stock ${!currentStock ? 'habilitado' : 'deshabilitado'}`, 
+        type: "success" 
       });
     } catch (error) {
       console.error("Error al actualizar el stock:", error);
+      setNotification({ 
+        show: true, 
+        message: "Error al actualizar el stock", 
+        type: "error" 
+      });
     }
-  };
+  }, []);
 
   const handleLogin = () => {
     if (password === ADMIN_KEY) {
@@ -147,8 +279,13 @@ function App() {
       setShowLogin(false);
       setPassword("");
       setError("");
+      setNotification({ 
+        show: true, 
+        message: "Sesión de administrador iniciada", 
+        type: "success" 
+      });
     } else {
-      setError("⚠️ Clave incorrecta, intenta de nuevo.");
+      setError("Clave incorrecta, intenta de nuevo.");
     }
   };
 
@@ -158,15 +295,32 @@ function App() {
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "todos" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const handleLogout = () => {
+    setAdminMode(false);
+    setShowForm(false);
+    setEditingProduct(null);
+    setNotification({ 
+      show: true, 
+      message: "Sesión cerrada", 
+      type: "info" 
+    });
+  };
+
+  // Filtrado optimizado con useMemo
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        product.name.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower);
+      const matchesCategory = 
+        selectedCategory === "todos" || product.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
   const HomePage = () => (
-    <div className="space-y-16">
+    <div className="space-y-16 animate-fadeIn">
       <section className="relative bg-gradient-to-r from-green-600 via-green-500 to-blue-500 text-white py-24 rounded-2xl overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-4xl mx-auto text-center px-6">
@@ -189,7 +343,7 @@ function App() {
       </section>
 
       <section className="grid md:grid-cols-3 gap-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-all transform hover:-translate-y-1">
           <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Star className="w-8 h-8 text-green-600" />
           </div>
@@ -197,7 +351,7 @@ function App() {
           <p className="text-gray-600">Productos de la más alta calidad para el cuidado integral de tus mascotas.</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-all transform hover:-translate-y-1">
           <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Clock className="w-8 h-8 text-blue-600" />
           </div>
@@ -205,7 +359,7 @@ function App() {
           <p className="text-gray-600">Servicio de entrega eficiente para que tu mascota no espere.</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-all transform hover:-translate-y-1">
           <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-purple-600" />
           </div>
@@ -218,7 +372,7 @@ function App() {
         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Productos Destacados</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {products.slice(0, 3).map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all transform hover:-translate-y-1">
               <div className="h-48 bg-gray-100">
                 {product.image ? (
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
@@ -231,25 +385,27 @@ function App() {
               <div className="p-6">
                 <h3 className="font-bold text-lg mb-2">{product.name}</h3>
                 <p className="text-2xl font-bold text-green-600 mb-2">${product.price}</p>
-                <p className="text-gray-600 text-sm">{product.description}</p>
+                <p className="text-gray-600 text-sm line-clamp-2">{product.description}</p>
               </div>
             </div>
           ))}
         </div>
-        <div className="text-center mt-8">
-          <button
-            onClick={() => setCurrentPage("productos")}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Ver Todos los Productos
-          </button>
-        </div>
+        {products.length > 3 && (
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setCurrentPage("productos")}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Ver Todos los Productos
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
 
   const ProductosPage = () => (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fadeIn">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Nuestros Productos</h1>
         
@@ -268,6 +424,7 @@ function App() {
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <Search className="inline w-4 h-4 mr-1" />
               Buscar productos
             </label>
             <input
@@ -280,6 +437,7 @@ function App() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <Filter className="inline w-4 h-4 mr-1" />
               Categoría
             </label>
             <select
@@ -292,6 +450,9 @@ function App() {
               ))}
             </select>
           </div>
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+          Mostrando {filteredProducts.length} de {products.length} productos
         </div>
       </div>
 
@@ -317,6 +478,7 @@ function App() {
                   className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                   placeholder="Ej: Alimento Premium para Perros"
                   required
+                  maxLength={100}
                 />
               </div>
 
@@ -332,6 +494,8 @@ function App() {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full border-2 border-gray-200 p-3 pl-8 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                     placeholder="0"
+                    min="0"
+                    step="0.01"
                     required
                   />
                 </div>
@@ -362,6 +526,7 @@ function App() {
                   onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                   className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                   placeholder="0"
+                  min="0"
                 />
               </div>
 
@@ -385,7 +550,12 @@ function App() {
                   Imagen del Producto
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors relative">
-                  {formData.image ? (
+                  {uploading ? (
+                    <div className="py-8">
+                      <Loader className="w-8 h-8 animate-spin text-green-500 mx-auto" />
+                      <p className="text-sm text-gray-600 mt-2">Subiendo imagen...</p>
+                    </div>
+                  ) : formData.image ? (
                     <div className="space-y-3">
                       <img
                         src={formData.image}
@@ -395,23 +565,27 @@ function App() {
                       <button
                         type="button"
                         onClick={handleDeleteImage}
-                        className="text-red-500 hover:text-red-700 text-sm"
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
                       >
                         Eliminar imagen
                       </button>
                     </div>
                   ) : (
-                    <div>
+                    <div className="py-4">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Haz clic para subir una imagen</p>
+                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF, WEBP (Max. 5MB)</p>
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e.target.files[0])}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
+                  {!uploading && (
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={(e) => handleImageUpload(e.target.files[0])}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploading}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -425,7 +599,11 @@ function App() {
                   rows="6"
                   className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                   placeholder="Describe las características del producto..."
+                  maxLength={500}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.description.length}/500 caracteres
+                </p>
               </div>
             </div>
           </div>
@@ -433,10 +611,20 @@ function App() {
           <div className="flex gap-3 pt-6 border-t mt-6">
             <button
               type="submit"
-              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg transition-all hover:shadow-xl"
+              disabled={saving || uploading}
+              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5" />
-              {editingProduct ? "Actualizar Producto" : "Crear Producto"}
+              {saving ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  {editingProduct ? "Actualizar Producto" : "Crear Producto"}
+                </>
+              )}
             </button>
 
             <button
@@ -444,7 +632,15 @@ function App() {
               onClick={() => {
                 setShowForm(false);
                 setEditingProduct(null);
-                setFormData({ name: "", price: "", description: "", image: "", stock: 0, inStock: true, category: "alimento" });
+                setFormData({ 
+                  name: "", 
+                  price: "", 
+                  description: "", 
+                  image: "", 
+                  stock: 0, 
+                  inStock: true, 
+                  category: "alimento" 
+                });
               }}
               className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
@@ -464,9 +660,17 @@ function App() {
           {filteredProducts.length === 0 && (
             <div className="col-span-full text-center py-12">
               <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-xl text-gray-500">No hay productos disponibles</p>
-              <p className="text-gray-400">
-                {adminMode ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' : 'Pronto tendremos productos disponibles'}
+              <p className="text-xl text-gray-500">
+                {searchTerm || selectedCategory !== "todos" 
+                  ? "No se encontraron productos con los filtros aplicados" 
+                  : "No hay productos disponibles"}
+              </p>
+              <p className="text-gray-400 mt-2">
+                {adminMode && !searchTerm && selectedCategory === "todos"
+                  ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' 
+                  : searchTerm || selectedCategory !== "todos"
+                  ? 'Intenta con otros términos de búsqueda o categorías'
+                  : 'Pronto tendremos productos disponibles'}
               </p>
             </div>
           )}
@@ -474,7 +678,7 @@ function App() {
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl ${
+              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl transform hover:-translate-y-1 ${
                 !product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
               }`}
             >
@@ -484,6 +688,7 @@ function App() {
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
@@ -509,51 +714,32 @@ function App() {
                   )}
                 </div>
               </div>
-
+              
+              {/* --- START OF MISSING CODE --- */}
               <div className="p-6">
-                <div className="mb-2">
-                  <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
-                    {categories.find(cat => cat.id === product.category)?.name || 'Sin categoría'}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{product.name}</h3>
-                <p className="text-2xl font-bold text-green-600 mb-3">${product.price}</p>
-                
-                {product.stock !== undefined && (
-                  <p className="text-sm text-gray-600 mb-3">
-                    Stock: <span className="font-semibold">{product.stock} unidades</span>
-                  </p>
-                )}
-                
-                <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                <h3 className="font-bold text-xl mb-2 truncate" title={product.name}>{product.name}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-3">${new Intl.NumberFormat('es-CL').format(product.price)}</p>
+                <p className="text-gray-600 text-sm h-10 line-clamp-2">{product.description || "Sin descripción."}</p>
+              </div>
 
-                {adminMode && (
-                  <div className="flex gap-2 pt-4 border-t">
-                    <button
-                      onClick={() => toggleStock(product.id, product.inStock)}
-                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                        product.inStock
-                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                      }`}
-                    >
-                      {product.inStock ? 'Sin stock' : 'Disponible'}
-                    </button>
-                    <button
-                      onClick={() => handleEdit(product)}
-                      className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
+              {adminMode && (
+                <div className="p-4 bg-gray-50 border-t flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(product)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Producto">
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                    >
+                    <button onClick={() => handleDelete(product.id, product.name)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Eliminar Producto">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                )}
-              </div>
+                  <button onClick={() => toggleStock(product.id, product.inStock)} className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 transition-colors ${product.inStock ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`} title={product.inStock ? "Marcar como 'Sin Stock'" : "Marcar como 'Disponible'"}>
+                    {product.inStock ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                    <span>{product.inStock ? 'Deshabilitar' : 'Habilitar'}</span>
+                  </button>
+                </div>
+              )}
+               {/* --- END OF MISSING CODE --- */}
+
             </div>
           ))}
         </div>
@@ -768,7 +954,7 @@ function App() {
 
             <button
               onClick={() =>
-                adminMode ? setAdminMode(false) : setShowLogin(true)
+                adminMode ? handleLogout() : setShowLogin(true)
               }
               className={`px-4 py-2 rounded-lg transition-colors shadow-md ${
                 adminMode
@@ -902,7 +1088,11 @@ function App() {
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700">
                   <span className="text-white text-sm">f</span>
                 </div>
-                <a href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
                     <span className="text-white text-sm">@</span>
                   </div>
@@ -912,7 +1102,7 @@ function App() {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-gray-400">
@@ -922,7 +1112,7 @@ function App() {
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Contacto</h4>
               <ul className="space-y-2 text-gray-400">
@@ -941,7 +1131,7 @@ function App() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-700 pt-8 text-center">
             <p className="text-gray-400">© 2025 Patitas Salvajes. Todos los derechos reservados.</p>
             <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
