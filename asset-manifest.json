@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/patitas-salvajes/static/css/main.0a79d31c.css",
-    "main.js": "/patitas-salvajes/static/js/main.4d399346.js",
+    "main.css": "/patitas-salvajes/static/css/main.0e45216b.css",
+    "main.js": "/patitas-salvajes/static/js/main.1026b789.js",
     "index.html": "/patitas-salvajes/index.html",
-    "main.0a79d31c.css.map": "/patitas-salvajes/static/css/main.0a79d31c.css.map",
-    "main.4d399346.js.map": "/patitas-salvajes/static/js/main.4d399346.js.map"
+    "main.0e45216b.css.map": "/patitas-salvajes/static/css/main.0e45216b.css.map",
+    "main.1026b789.js.map": "/patitas-salvajes/static/js/main.1026b789.js.map"
   },
   "entrypoints": [
-    "static/css/main.0a79d31c.css",
-    "static/js/main.4d399346.js"
+    "static/css/main.0e45216b.css",
+    "static/js/main.1026b789.js"
   ]
 }
