@@ -1,526 +1,955 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, Star, Loader, Image as ImageIcon } from "lucide-react";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { db, storage } from "./firebase";
 
-// Ensure Tailwind CSS is loaded. In a real React project, you'd configure it.
-// For this Canvas environment, we assume it's available or would be linked in index.html.
+function App() {
+  const [currentPage, setCurrentPage] = useState("home");
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    description: "",
+    image: "",
+    stock: 0,
+    inStock: true,
+    category: "alimento"
+  });
+  const [adminMode, setAdminMode] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("todos");
 
-// Placeholder product data
-const initialProducts = [
-  {
-    id: '1',
-    name: 'Alimento de Expedición para Perros',
-    price: 38.99,
-    image: 'https://placehold.co/400x300/6B8E23/FFFFFF?text=Alimento+Expedición', // Earthy green for adventure
-    description: 'Nutrición completa para perros activos y aventureros. Con ingredientes naturales para energía y vitalidad.',
-    category: 'Alimentos',
-    stock: 50,
-  },
-  {
-    id: '2',
-    name: 'Rascador "Pico Salvaje" para Gatos',
-    price: 15.00,
-    image: 'https://placehold.co/400x300/8B4513/FFFFFF?text=Rascador+Gato', // Brown for nature
-    description: 'Rascador robusto con múltiples niveles y texturas para satisfacer el instinto de tu gato. ¡Ideal para pequeños exploradores!',
-    category: 'Juguetes',
-    stock: 30,
-  },
-  {
-    id: '3',
-    name: 'Spray Protector "Escudo Natural"',
-    price: 22.00,
-    image: 'https://placehold.co/400x300/228B22/FFFFFF?text=Spray+Protector', // Forest green
-    description: 'Protección natural contra insectos y elementos para tus mascotas en sus aventuras al aire libre. Hipoalergénico.',
-    category: 'Higiene',
-    stock: 40,
-  },
-  {
-    id: '4',
-    name: 'Mochila de Aventura para Perros',
-    price: 65.00,
-    image: 'https://placehold.co/400x300/D2B48C/8B4513?text=Mochila+Perro', // Tan/brown for gear
-    description: 'Mochila ergonómica y resistente para que tu perro lleve sus propias provisiones en caminatas y excursiones. Con arnés ajustable.',
-    category: 'Accesorios',
-    stock: 15,
-  },
-  {
-    id: '5',
-    name: 'Premios Energéticos "Sendero Feliz"',
-    price: 9.50,
-    image: 'https://placehold.co/400x300/FFD700/8B4513?text=Premios+Energía', // Golden for energy
-    description: 'Premios nutritivos y deliciosos para recargar energías durante largas jornadas de juego y exploración.',
-    category: 'Alimentos',
-    stock: 60,
-  },
-];
+  const ADMIN_KEY = "Patitassalvajes1996*";
 
-// Product Card Component
-const ProductCard = ({ product, onAddToCart, onViewDetails }) => (
-  <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-transform hover:scale-105 duration-300 flex flex-col h-full">
-    <img
-      src={product.image}
-      alt={product.name}
-      className="w-full h-48 object-cover object-center"
-      onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x300/A0A0A0/FFFFFF?text=Imagen+No+Disponible'; }}
-    />
-    <div className="p-4 flex flex-col flex-grow">
-      <h3 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h3>
-      <p className="text-gray-600 text-sm flex-grow">{product.description.substring(0, 70)}...</p>
-      <div className="flex items-center justify-between mt-4">
-        <span className="text-2xl font-bold text-green-700">${product.price.toFixed(2)}</span> {/* Updated color */}
-        <div className="flex space-x-2">
-          <button
-            onClick={() => onViewDetails(product)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition duration-200 shadow-md"
-          >
-            Ver Detalles
-          </button>
-          <button
-            onClick={() => onAddToCart(product)}
-            className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition duration-200 shadow-md"
-          >
-            Añadir al Carrito
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  const categories = [
+    { id: "todos", name: "Todos los productos" },
+    { id: "alimento", name: "Alimentos" },
+    { id: "medicina", name: "Medicinas" },
+    { id: "juguetes", name: "Juguetes" },
+    { id: "accesorios", name: "Accesorios" },
+    { id: "higiene", name: "Higiene" }
+  ];
 
-// Product List Component
-const ProductList = ({ products, onAddToCart, onViewDetails }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-    {products.map((product) => (
-      <ProductCard
-        key={product.id}
-        product={product}
-        onAddToCart={onAddToCart}
-        onViewDetails={onViewDetails}
-      />
-    ))}
-  </div>
-);
+  // Cargar productos desde Firestore en tiempo real
+  useEffect(() => {
+    const productsCollection = collection(db, "products");
+    const unsubscribe = onSnapshot(productsCollection, (querySnapshot) => {
+      const productsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setProducts(productsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error al cargar los productos:", error);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
-// Product Detail Component
-const ProductDetail = ({ product, onAddToCart, onBack }) => (
-  <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg my-8 max-w-4xl">
-    <button
-      onClick={onBack}
-      className="mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200 flex items-center"
-    >
-      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-      Volver a Productos
-    </button>
-    <div className="flex flex-col md:flex-row gap-8">
-      <div className="md:w-1/2">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-auto rounded-lg shadow-md"
-          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x450/A0A0A0/FFFFFF?text=Imagen+No+Disponible'; }}
-        />
-      </div>
-      <div className="md:w-1/2 flex flex-col justify-between">
-        <div>
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{product.name}</h2>
-          <p className="text-gray-700 text-lg mb-6">{product.description}</p>
-          <p className="text-gray-600 text-base mb-2">Categoría: <span className="font-semibold">{product.category}</span></p>
-          <p className="text-gray-600 text-base mb-6">Stock Disponible: <span className="font-semibold">{product.stock}</span></p>
-        </div>
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200">
-          <span className="text-4xl font-bold text-green-700">${product.price.toFixed(2)}</span> {/* Updated color */}
-          <button
-            onClick={() => onAddToCart(product)}
-            className="px-8 py-3 bg-orange-600 text-white text-lg font-bold rounded-lg hover:bg-orange-700 transition duration-200 shadow-lg"
-          >
-            Añadir al Carrito
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Cart Component
-const Cart = ({ cartItems, onUpdateQuantity, onRemoveItem, onCheckout, onBack }) => {
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  return (
-    <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg my-8 max-w-3xl">
-      <button
-        onClick={onBack}
-        className="mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200 flex items-center"
-      >
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        Seguir Comprando
-      </button>
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">Tu Carrito de Expedición</h2> {/* Updated text */}
-      {cartItems.length === 0 ? (
-        <p className="text-gray-600 text-lg">Tu carrito está vacío. ¡Añade algunos artículos para tu próxima aventura!</p> 
-      ) : (
-        <>
-          <div className="space-y-4">
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm">
-                <div className="flex items-center">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md mr-4" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">${item.price.toFixed(2)} c/u</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center border rounded-lg">
-                    <button
-                      onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      className="px-3 py-1 bg-gray-200 rounded-l-lg hover:bg-gray-300 disabled:opacity-50"
-                    >
-                      -
-                    </button>
-                    <span className="px-3">{item.quantity}</span>
-                    <button
-                      onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                      className="px-3 py-1 bg-gray-200 rounded-r-lg hover:bg-gray-300"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => onRemoveItem(item.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-between items-center border-t pt-6 border-gray-200">
-            <span className="text-2xl font-bold text-gray-900">Total: ${total.toFixed(2)}</span>
-            <button
-              onClick={onCheckout}
-              className="px-8 py-3 bg-green-700 text-white text-lg font-bold rounded-lg hover:bg-green-800 transition duration-200 shadow-lg"
-            >
-              Proceder al Pago
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// Checkout Component (Simulated)
-const Checkout = ({ onConfirmPurchase, onBackToCart }) => {
-  const [paymentStatus, setPaymentStatus] = useState('pending'); // 'pending', 'processing', 'success', 'failed'
-
-  const handlePayment = () => {
-    setPaymentStatus('processing');
-    // Simulate API call
-    setTimeout(() => {
-      const success = Math.random() > 0.2; // 80% success rate
-      if (success) {
-        setPaymentStatus('success');
-        onConfirmPurchase(); // Clear cart and go to home
-      } else {
-        setPaymentStatus('failed');
-      }
-    }, 2000);
-  };
-
-  return (
-    <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg my-8 max-w-2xl text-center">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">Confirmar Expedición</h2> {/* Updated text */}
-      {paymentStatus === 'pending' && (
-        <>
-          <p className="text-gray-700 text-lg mb-8">
-            Estás a punto de completar tu compra. Por favor, revisa tus productos en el carrito antes de proceder.
-          </p>
-          <button
-            onClick={handlePayment}
-            className="px-8 py-3 bg-orange-600 text-white text-lg font-bold rounded-lg hover:bg-orange-700 transition duration-200 shadow-lg mr-4"
-          >
-            Pagar Ahora (Simulado)
-          </button>
-          <button
-            onClick={onBackToCart}
-            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
-          >
-            Volver al Carrito
-          </button>
-        </>
-      )}
-      {paymentStatus === 'processing' && (
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500 mb-4"></div> {/* Updated color */}
-          <p className="text-orange-600 text-xl font-semibold">Preparando tu expedición...</p> {/* Updated text */}
-        </div>
-      )}
-      {paymentStatus === 'success' && (
-        <div className="text-green-700"> {/* Updated color */}
-          <svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <p className="text-3xl font-bold mb-4">¡Expedición Confirmada!</p> {/* Updated text */}
-          <p className="text-lg">Gracias por tu compra. ¡Tus patitas salvajes estarán felices!</p> {/* Updated text */}
-          <button
-            onClick={() => window.location.reload()} // Simple reload to reset app state
-            className="mt-6 px-6 py-3 bg-orange-600 text-white text-lg font-bold rounded-lg hover:bg-orange-700 transition duration-200 shadow-lg"
-          >
-            Volver al Campamento Base
-          </button>
-        </div>
-      )}
-      {paymentStatus === 'failed' && (
-        <div className="text-red-600">
-          <svg className="w-20 h-20 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <p className="text-3xl font-bold mb-4">¡Expedición Fallida!</p> {/* Updated text */}
-          <p className="text-lg">Hubo un problema con tu pago. Por favor, inténtalo de nuevo o contacta con el guía.</p> {/* Updated text */}
-          <button
-            onClick={() => setPaymentStatus('pending')}
-            className="mt-6 px-6 py-3 bg-red-600 text-white text-lg font-bold rounded-lg hover:bg-red-700 transition duration-200 shadow-lg mr-4"
-          >
-            Reintentar Expedición
-          </button>
-          <button
-            onClick={onBackToCart}
-            className="mt-6 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
-          >
-            Volver al Carrito
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Product Recommender Component using Gemini API
-const ProductRecommender = ({ products }) => {
-  const [petType, setPetType] = useState('');
-  const [recommendations, setRecommendations] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const getRecommendations = async () => {
-    if (!petType.trim()) {
-      setError('Por favor, ingresa el tipo de mascota (ej. perro, gato, etc.).');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setRecommendations('');
-
-    const productNames = products.map(p => p.name).join(', ');
-    const prompt = `Basado en los siguientes productos disponibles: ${productNames}. Recomienda 3 productos para un ${petType} y explica brevemente por qué. Si no encuentras un producto específico, puedes sugerir una categoría general. Responde en español.`;
-
-    let chatHistory = [];
-    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-    const payload = { contents: chatHistory };
-    const apiKey = ""; // If you want to use models other than gemini-2.5-flash-preview-05-20 or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+  const handleImageUpload = async (file) => {
+    if (!file) return;
 
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        setRecommendations(result.candidates[0].content.parts[0].text);
-      } else {
-        setError('No se pudieron obtener recomendaciones. Inténtalo de nuevo.');
-      }
-    } catch (e) {
-      console.error("Error fetching recommendations:", e);
-      setError(`Error al conectar con la IA: ${e.message}.`);
-    } finally {
-      setLoading(false);
+      const storageRef = ref(storage, `images/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(storageRef);
+      setFormData({ ...formData, image: imageUrl });
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
     }
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow-lg p-6 mt-8 max-w-2xl mx-auto">
-      <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Recomendador de Productos ✨</h3>
-      <p className="text-gray-700 mb-4 text-center">
-        Ingresa el tipo de mascota para obtener sugerencias de productos personalizadas.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        <input
-          type="text"
-          value={petType}
-          onChange={(e) => setPetType(e.target.value)}
-          placeholder="Ej: perro, gato, hámster"
-          className="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-        <button
-          onClick={getRecommendations}
-          disabled={loading}
-          className="px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-          {loading ? (
-            <svg className="animate-spin h-5 w-5 text-white mr-3" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            'Obtener Recomendaciones ✨'
-          )}
-        </button>
+  const handleDeleteImage = async () => {
+    const imageRef = ref(storage, formData.image);
+    try {
+      await deleteObject(imageRef);
+      setFormData({ ...formData, image: "" });
+    } catch (error) {
+      console.error("Error al eliminar la imagen:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.price) {
+      alert("Por favor completa todos los campos obligatorios");
+      return;
+    }
+
+    try {
+      if (editingProduct) {
+        const productDoc = doc(db, "products", editingProduct.id);
+        await updateDoc(productDoc, formData);
+      } else {
+        await addDoc(collection(db, "products"), { ...formData });
+      }
+
+      setFormData({
+        name: "",
+        price: "",
+        description: "",
+        image: "",
+        stock: 0,
+        inStock: true,
+        category: "alimento"
+      });
+      setEditingProduct(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error al guardar el producto:", error);
+    }
+  };
+
+  const handleEdit = (product) => {
+    setFormData({
+      name: product.name,
+      price: product.price,
+      description: product.description,
+      image: product.image || "",
+      stock: product.stock || 0,
+      inStock: product.inStock,
+      category: product.category || "alimento"
+    });
+    setEditingProduct(product);
+    setShowForm(true);
+    setCurrentPage("productos");
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("¿Seguro que quieres eliminar este producto?")) {
+      try {
+        await deleteDoc(doc(db, "products", id));
+      } catch (error) {
+        console.error("Error al eliminar el producto:", error);
+      }
+    }
+  };
+
+  const toggleStock = async (id, currentStock) => {
+    try {
+      const productDoc = doc(db, "products", id);
+      await updateDoc(productDoc, {
+        inStock: !currentStock,
+      });
+    } catch (error) {
+      console.error("Error al actualizar el stock:", error);
+    }
+  };
+
+  const handleLogin = () => {
+    if (password === ADMIN_KEY) {
+      setAdminMode(true);
+      setShowLogin(false);
+      setPassword("");
+      setError("");
+    } else {
+      setError("⚠️ Clave incorrecta, intenta de nuevo.");
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "todos" || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const HomePage = () => (
+    <div className="space-y-16">
+      <section className="relative bg-gradient-to-r from-green-600 via-green-500 to-blue-500 text-white py-24 rounded-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-4xl mx-auto text-center px-6">
+          <div className="mb-6">
+            <span className="text-6xl">🐾</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+            Cuidamos a tus <span className="text-yellow-300">Patitas Salvajes</span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 opacity-90">
+            Los mejores productos veterinarios para el bienestar de tus mascotas
+          </p>
+          <button
+            onClick={() => setCurrentPage("productos")}
+            className="bg-white text-green-600 px-8 py-4 rounded-full text-lg font-bold hover:bg-yellow-100 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Ver Productos
+          </button>
+        </div>
+      </section>
+
+      <section className="grid md:grid-cols-3 gap-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+          <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Star className="w-8 h-8 text-green-600" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Calidad Premium</h3>
+          <p className="text-gray-600">Productos de la más alta calidad para el cuidado integral de tus mascotas.</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-8 h-8 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Entrega Rápida</h3>
+          <p className="text-gray-600">Servicio de entrega eficiente para que tu mascota no espere.</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
+          <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Package className="w-8 h-8 text-purple-600" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">Amplio Catálogo</h3>
+          <p className="text-gray-600">Desde alimentos hasta medicinas, todo lo que necesitas en un solo lugar.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Productos Destacados</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {products.slice(0, 3).map((product) => (
+            <div key={product.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <div className="h-48 bg-gray-100">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <Package className="w-16 h-16 text-gray-300" />
+                  </div>
+                )}
+              </div>
+              <div className="p-6">
+                <h3 className="font-bold text-lg mb-2">{product.name}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-2">${product.price}</p>
+                <p className="text-gray-600 text-sm">{product.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <button
+            onClick={() => setCurrentPage("productos")}
+            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Ver Todos los Productos
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+
+  const ProductosPage = () => (
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-3xl font-bold text-gray-800">Nuestros Productos</h1>
+        
+        {adminMode && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 flex items-center gap-2 shadow-lg transition-all hover:shadow-xl"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo Producto
+          </button>
+        )}
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mt-4" role="alert">
-          <strong className="font-bold">¡Error!</strong>
-          <span className="block sm:inline"> {error}</span>
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Buscar productos
+            </label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+              placeholder="Buscar por nombre o descripción..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Categoría
+            </label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+            >
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      )}
+      </div>
 
-      {recommendations && (
-        <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg mt-4">
-          <h4 className="text-lg font-semibold mb-2">Sugerencias para tu {petType}:</h4>
-          <p className="whitespace-pre-wrap">{recommendations}</p>
-          <p className="text-sm text-gray-600 mt-4">
-            <strong className="font-bold">Descargo de responsabilidad:</strong> Estas recomendaciones son generadas por IA y son solo sugerencias. Consulta siempre a un veterinario para necesidades específicas de tu mascota.
-          </p>
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <Package className="w-6 h-6 text-green-600" />
+            <h2 className="text-2xl font-bold text-gray-800">
+              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nombre del Producto *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  placeholder="Ej: Alimento Premium para Perros"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Precio *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full border-2 border-gray-200 p-3 pl-8 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                    placeholder="0"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Categoría *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                >
+                  {categories.slice(1).map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Cantidad en Stock
+                </label>
+                <input
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                  className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="inStock"
+                  checked={formData.inStock}
+                  onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+                  className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                />
+                <label htmlFor="inStock" className="text-sm font-semibold text-gray-700">
+                  Producto disponible
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Imagen del Producto
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors relative">
+                  {formData.image ? (
+                    <div className="space-y-3">
+                      <img
+                        src={formData.image}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg shadow-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteImage}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Eliminar imagen
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Haz clic para subir una imagen</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e.target.files[0])}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Descripción
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows="6"
+                  className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                  placeholder="Describe las características del producto..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-6 border-t mt-6">
+            <button
+              type="submit"
+              className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg transition-all hover:shadow-xl"
+            >
+              <Save className="w-5 h-5" />
+              {editingProduct ? "Actualizar Producto" : "Crear Producto"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                setEditingProduct(null);
+                setFormData({ name: "", price: "", description: "", image: "", stock: 0, inStock: true, category: "alimento" });
+              }}
+              className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+      
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader className="w-10 h-10 animate-spin text-green-500" />
+          <p className="ml-4 text-gray-500">Cargando productos...</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-xl text-gray-500">No hay productos disponibles</p>
+              <p className="text-gray-400">
+                {adminMode ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' : 'Pronto tendremos productos disponibles'}
+              </p>
+            </div>
+          )}
+          
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl ${
+                !product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
+              }`}
+            >
+              <div className="relative h-48 bg-gray-100">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <ImageIcon className="w-16 h-16 text-gray-300" />
+                  </div>
+                )}
+                
+                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
+                  product.inStock 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-red-500 text-white'
+                }`}>
+                  {product.inStock ? (
+                    <div className="flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      Disponible
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <X className="w-3 h-3" />
+                      Sin Stock
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-2">
+                  <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                    {categories.find(cat => cat.id === product.category)?.name || 'Sin categoría'}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{product.name}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-3">${product.price}</p>
+                
+                {product.stock !== undefined && (
+                  <p className="text-sm text-gray-600 mb-3">
+                    Stock: <span className="font-semibold">{product.stock} unidades</span>
+                  </p>
+                )}
+                
+                <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+
+                {adminMode && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <button
+                      onClick={() => toggleStock(product.id, product.inStock)}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        product.inStock
+                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      }`}
+                    >
+                      {product.inStock ? 'Sin stock' : 'Disponible'}
+                    </button>
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
-};
 
+  const ContactoPage = () => (
+    <div className="space-y-12">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">Contáctanos</h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          ¿Tienes preguntas sobre nuestros productos? ¿Necesitas asesoría veterinaria? 
+          Estamos aquí para ayudarte.
+        </p>
+      </div>
 
-// Main App Component
-export default function App() {
-  const [view, setView] = useState('home'); // 'home', 'productDetail', 'cart', 'checkout'
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
+      <div className="grid md:grid-cols-2 gap-12">
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Información de Contacto</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <Phone className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Teléfono</p>
+                  <p className="text-gray-600">+56 9 1234 5678</p>
+                </div>
+              </div>
 
-  const handleAddToCart = (product) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      } else {
-        return [...prevItems, { ...product, quantity: 1 }];
-      }
-    });
-    // Optional: show a confirmation message or redirect to cart
-    // alert(`${product.name} añadido al carrito!`); // Avoid alert(), use custom modal
-  };
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Mail className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Email</p>
+                  <p className="text-gray-600">contacto@patitassalvajes.cl</p>
+                </div>
+              </div>
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(productId);
-      return;
-    }
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
+              <div className="flex items-center space-x-4">
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <MapPin className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Dirección</p>
+                  <p className="text-gray-600">Chiguayante, Concepción, Chile</p>
+                </div>
+              </div>
 
-  const handleRemoveItem = (productId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId));
-  };
+              <div className="flex items-center space-x-4">
+                <div className="bg-orange-100 p-3 rounded-full">
+                  <Clock className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Horarios</p>
+                  <p className="text-gray-600">Lun - Vie: 9:00 - 18:00</p>
+                  <p className="text-gray-600">Sáb: 9:00 - 14:00</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-  const handleViewDetails = (product) => {
-    setSelectedProduct(product);
-    setView('productDetail');
-  };
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">¿Por qué elegirnos?</h3>
+            <ul className="space-y-2 text-gray-600">
+              <li>• Productos de calidad garantizada</li>
+              <li>• Asesoría profesional especializada</li>
+              <li>• Entrega rápida y segura</li>
+              <li>• Atención personalizada</li>
+              <li>• Más de 10 años de experiencia</li>
+            </ul>
+          </div>
+        </div>
 
-  const handleConfirmPurchase = () => {
-    setCartItems([]); // Clear the cart
-    setView('home'); // Go back to home
-  };
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Envíanos un mensaje</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nombre completo
+              </label>
+              <input
+                type="text"
+                className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                placeholder="Tu nombre"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                placeholder="tu@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Teléfono (opcional)
+              </label>
+              <input
+                type="tel"
+                className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                placeholder="+56 9 1234 5678"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Asunto
+              </label>
+              <select className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors">
+                <option value="">Selecciona un asunto</option>
+                <option value="consulta">Consulta sobre productos</option>
+                <option value="pedido">Realizar pedido</option>
+                <option value="soporte">Soporte técnico</option>
+                <option value="veterinario">Consulta veterinaria</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Mensaje
+              </label>
+              <textarea
+                rows="5"
+                className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
+                placeholder="Cuéntanos en qué podemos ayudarte..."
+              />
+            </div>
+
+            <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 font-semibold transition-colors shadow-lg hover:shadow-xl">
+              Enviar Mensaje
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+        <h3 className="text-2xl font-bold text-gray-800 mb-4">Visítanos</h3>
+        <p className="text-gray-600 mb-6">
+          Te invitamos a conocer nuestra tienda física donde podrás ver todos nuestros productos 
+          y recibir asesoría personalizada de nuestros expertos.
+        </p>
+        <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Mapa interactivo próximamente</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-orange-100 font-sans text-gray-900"> {/* Updated gradient */}
-      {/* Header */}
-      <header className="bg-green-800 text-white p-4 shadow-md"> {/* Updated header color */}
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-extrabold cursor-pointer" onClick={() => setView('home')}>
-            Patitas Salvajes
-          </h1>
-          <nav className="flex items-center space-x-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <header className="bg-white shadow-lg border-b-4 border-green-600 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src="https://github.com/JoeAnalyst16/Projects/blob/main/patitas%20jpg.jpg?raw=true" alt="Logo de Patitas Salvajes" className="h-16" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Patitas Salvajes</h1>
+                <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
+              </div>
+            </div>
+            
+            <nav className="hidden md:flex space-x-8">
+              <button
+                onClick={() => setCurrentPage("home")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === "home" 
+                    ? "bg-green-100 text-green-700" 
+                    : "text-gray-600 hover:text-green-600"
+                }`}
+              >
+                <Home className="w-4 h-4" />
+                <span>Inicio</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage("productos")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === "productos" 
+                    ? "bg-green-100 text-green-700" 
+                    : "text-gray-600 hover:text-green-600"
+                }`}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Productos</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage("contacto")}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === "contacto" 
+                    ? "bg-green-100 text-green-700" 
+                    : "text-gray-600 hover:text-green-600"
+                }`}
+              >
+                <Mail className="w-4 h-4" />
+                <span>Contacto</span>
+              </button>
+            </nav>
+
             <button
-              onClick={() => setView('home')}
-              className="text-lg font-medium hover:text-green-200 transition duration-200"
+              onClick={() =>
+                adminMode ? setAdminMode(false) : setShowLogin(true)
+              }
+              className={`px-4 py-2 rounded-lg transition-colors shadow-md ${
+                adminMode
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
             >
-              Productos
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                {adminMode ? "Salir Admin" : "Modo Admin"}
+              </div>
+            </button>
+          </div>
+
+          <nav className="md:hidden mt-4 flex justify-center space-x-6">
+            <button
+              onClick={() => setCurrentPage("home")}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
+                currentPage === "home" 
+                  ? "bg-green-100 text-green-700" 
+                  : "text-gray-600"
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span className="text-xs">Inicio</span>
             </button>
             <button
-              onClick={() => setView('cart')}
-              className="relative text-lg font-medium hover:text-green-200 transition duration-200"
+              onClick={() => setCurrentPage("productos")}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
+                currentPage === "productos" 
+                  ? "bg-green-100 text-green-700" 
+                  : "text-gray-600"
+              }`}
             >
-              <svg className="w-7 h-7 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-              Carrito
-              {cartItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartItems.length}
-                </span>
-              )}
+              <ShoppingBag className="w-5 h-5" />
+              <span className="text-xs">Productos</span>
+            </button>
+            <button
+              onClick={() => setCurrentPage("contacto")}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
+                currentPage === "contacto" 
+                  ? "bg-green-100 text-green-700" 
+                  : "text-gray-600"
+              }`}
+            >
+              <Mail className="w-5 h-5" />
+              <span className="text-xs">Contacto</span>
             </button>
           </nav>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="container mx-auto py-8">
-        {view === 'home' && (
-          <>
-            <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-10">¡Equipa a tus Patitas para la Aventura!</h2> {/* Updated text */}
-            <ProductList
-              products={initialProducts}
-              onAddToCart={handleAddToCart}
-              onViewDetails={handleViewDetails}
+      {adminMode && (
+        <div className="bg-red-500 text-white text-center py-2 text-sm font-semibold">
+          🔒 MODO ADMINISTRADOR ACTIVO
+        </div>
+      )}
+
+      {showLogin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative">
+            <button
+              onClick={() => {
+                setShowLogin(false);
+                setPassword("");
+                setError("");
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              ✖
+            </button>
+            <div className="flex flex-col items-center mb-6">
+              <div className="bg-green-100 p-4 rounded-full mb-4">
+                <Lock className="w-12 h-12 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Acceso Administrador
+              </h2>
+              <p className="text-sm text-gray-500 text-center mt-2">
+                Ingresa la clave para administrar productos
+              </p>
+            </div>
+
+            <input
+              type="password"
+              placeholder="Clave de acceso"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none mb-3 text-center"
             />
-            {/* New Product Recommender Component */}
-            <ProductRecommender products={initialProducts} />
-          </>
-        )}
 
-        {view === 'productDetail' && selectedProduct && (
-          <ProductDetail
-            product={selectedProduct}
-            onAddToCart={handleAddToCart}
-            onBack={() => setView('home')}
-          />
-        )}
+            {error && (
+              <div className="flex items-center justify-center gap-2 text-red-600 text-sm mb-3 bg-red-50 p-2 rounded-lg">
+                <AlertTriangle className="w-4 h-4" />
+                {error}
+              </div>
+            )}
 
-        {view === 'cart' && (
-          <Cart
-            cartItems={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onCheckout={() => setView('checkout')}
-            onBack={() => setView('home')}
-          />
-        )}
+            <button
+              onClick={handleLogin}
+              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 shadow-md transition-all font-semibold"
+            >
+              Ingresar al Panel Admin
+            </button>
+          </div>
+        </div>
+      )}
 
-        {view === 'checkout' && (
-          <Checkout
-            onConfirmPurchase={handleConfirmPurchase}
-            onBackToCart={() => setView('cart')}
-          />
-        )}
+      <main className="max-w-6xl mx-auto p-6">
+        {currentPage === "home" && <HomePage />}
+        {currentPage === "productos" && <ProductosPage />}
+        {currentPage === "contacto" && <ContactoPage />}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white p-6 mt-12">
-        <div className="container mx-auto text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Patitas Salvajes. Todos los derechos reservados.</p> {/* Updated text */}
-          <p className="mt-2">Contacto: info@patitassalvajes.com | Tel: +123 456 7890</p>
+      <footer className="bg-gray-800 text-white py-12 mt-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="bg-green-600 p-2 rounded-full">
+                  <span className="text-white text-xl">🐾</span>
+                </div>
+                <h3 className="text-xl font-bold">Patitas Salvajes</h3>
+              </div>
+              <p className="text-gray-400 mb-4">
+                Somos una empresa dedicada al bienestar de tus mascotas, ofreciendo productos 
+                veterinarios de la más alta calidad con más de 10 años de experiencia.
+              </p>
+              <div className="flex space-x-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700">
+                  <span className="text-white text-sm">f</span>
+                </div>
+                <a href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3" target="_blank" rel="noopener noreferrer">
+                  <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
+                    <span className="text-white text-sm">@</span>
+                  </div>
+                </a>
+                <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500">
+                  <span className="text-white text-sm">t</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><button onClick={() => setCurrentPage("home")} className="hover:text-white transition-colors">Inicio</button></li>
+                <li><button onClick={() => setCurrentPage("productos")} className="hover:text-white transition-colors">Productos</button></li>
+                <li><button onClick={() => setCurrentPage("contacto")} className="hover:text-white transition-colors">Contacto</button></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Contacto</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4" />
+                  <span>+56 9 1234 5678</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4" />
+                  <span>contacto@patitassalvajes.cl</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>Santiago, Chile</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-700 pt-8 text-center">
+            <p className="text-gray-400">© 2025 Patitas Salvajes. Todos los derechos reservados.</p>
+            <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+
+export default App;
