@@ -714,6 +714,37 @@ function App() {
                   )}
                 </div>
               </div>
+              
+              {/* --- START OF MISSING CODE --- */}
+              <div className="p-6">
+                <h3 className="font-bold text-xl mb-2 truncate" title={product.name}>{product.name}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-3">${new Intl.NumberFormat('es-CL').format(product.price)}</p>
+                <p className="text-gray-600 text-sm h-10 line-clamp-2">{product.description || "Sin descripción."}</p>
+              </div>
+
+              {adminMode && (
+                <div className="p-4 bg-gray-50 border-t flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(product)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Producto">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(product.id, product.name)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Eliminar Producto">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button onClick={() => toggleStock(product.id, product.inStock)} className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 transition-colors ${product.inStock ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`} title={product.inStock ? "Marcar como 'Sin Stock'" : "Marcar como 'Disponible'"}>
+                    {product.inStock ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                    <span>{product.inStock ? 'Deshabilitar' : 'Habilitar'}</span>
+                  </button>
+                </div>
+              )}
+               {/* --- END OF MISSING CODE --- */}
+
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 
   const ContactoPage = () => (
@@ -923,7 +954,7 @@ function App() {
 
             <button
               onClick={() =>
-                adminMode ? setAdminMode(false) : setShowLogin(true)
+                adminMode ? handleLogout() : setShowLogin(true)
               }
               className={`px-4 py-2 rounded-lg transition-colors shadow-md ${
                 adminMode
@@ -1057,7 +1088,11 @@ function App() {
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700">
                   <span className="text-white text-sm">f</span>
                 </div>
-                <a href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
                     <span className="text-white text-sm">@</span>
                   </div>
@@ -1067,7 +1102,7 @@ function App() {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-gray-400">
@@ -1077,7 +1112,7 @@ function App() {
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Contacto</h4>
               <ul className="space-y-2 text-gray-400">
@@ -1096,7 +1131,7 @@ function App() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-700 pt-8 text-center">
             <p className="text-gray-400">© 2025 Patitas Salvajes. Todos los derechos reservados.</p>
             <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
