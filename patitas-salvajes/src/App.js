@@ -33,46 +33,25 @@ function App() {
     { id: "higiene", name: "Higiene" }
   ];
 
-  // Datos de ejemplo para demostrar funcionalidad
-  useEffect(() => {
-    if (products.length === 0) {
-      const sampleProducts = [
-        {
-          id: "1",
-          name: "Alimento Premium para Perros Adultos",
-          price: "25000",
-          description: "Alimento balanceado premium para perros adultos, rico en proteínas y nutrientes esenciales.",
-          image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=300&fit=crop",
-          stock: 15,
-          inStock: true,
-          category: "alimento"
-        },
-        {
-          id: "2",
-          name: "Vitaminas para Gatos",
-          price: "18000",
-          description: "Suplemento vitamínico completo para gatos de todas las edades.",
-          image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop",
-          stock: 8,
-          inStock: true,
-          category: "medicina"
-        },
-        {
-          id: "3",
-          name: "Juguete Interactivo para Perros",
-          price: "12000",
-          description: "Juguete resistente que estimula la mente de tu mascota mientras juega.",
-          image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop",
-          stock: 0,
-          inStock: false,
-          category: "juguetes"
-        }
-      ];
-      setProducts(sampleProducts);
-    }
-  }, [products.length]);
-
   // --- Funciones de manejo ---
+
+  // Carga los productos desde el servidor JSON al iniciar la aplicación
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/products");
+        if (!response.ok) {
+          throw new Error("No se pudo conectar al servidor JSON.");
+        }
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error al cargar los productos:", error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -84,33 +63,52 @@ function App() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.price) {
       alert("Por favor completa todos los campos obligatorios");
       return;
     }
 
-    if (editingProduct) {
-      setProducts(
-        products.map((p) =>
-          p.id === editingProduct.id ? { ...formData, id: p.id } : p
-        )
-      );
-    } else {
-      setProducts([...products, { ...formData, id: Date.now().toString() }]);
-    }
+    try {
+      let url = "http://localhost:3001/products";
+      let method = "POST";
 
-    setFormData({
-      name: "",
-      price: "",
-      description: "",
-      image: "",
-      stock: 0,
-      inStock: true,
-      category: "alimento"
-    });
-    setEditingProduct(null);
-    setShowForm(false);
+      if (editingProduct) {
+        url = `http://localhost:3001/products/${editingProduct.id}`;
+        method = "PUT";
+      }
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        // Vuelve a cargar los productos para reflejar los cambios
+        const updatedProducts = await fetch("http://localhost:3001/products").then(res => res.json());
+        setProducts(updatedProducts);
+        
+        // Limpia el formulario y el estado
+        setFormData({
+          name: "",
+          price: "",
+          description: "",
+          image: "",
+          stock: 0,
+          inStock: true,
+          category: "alimento"
+        });
+        setEditingProduct(null);
+        setShowForm(false);
+      } else {
+        console.error("Error al guardar el producto");
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+    }
   };
 
   const handleEdit = (product) => {
@@ -128,18 +126,50 @@ function App() {
     setCurrentPage("productos");
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("¿Seguro que quieres eliminar este producto?")) {
-      setProducts(products.filter((p) => p.id !== id));
+      try {
+        const response = await fetch(`http://localhost:3001/products/${id}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          // Actualiza el estado después de la eliminación exitosa
+          setProducts(products.filter((p) => p.id !== id));
+        } else {
+          console.error("Error al eliminar el producto");
+        }
+      } catch (error) {
+        console.error("Error en la petición de eliminación:", error);
+      }
     }
   };
 
-  const toggleStock = (id) => {
-    setProducts(
-      products.map((p) =>
-        p.id === id ? { ...p, inStock: !p.inStock } : p
-      )
-    );
+  const toggleStock = async (id) => {
+    const productToUpdate = products.find(p => p.id === id);
+    if (!productToUpdate) return;
+
+    const updatedProduct = {
+      ...productToUpdate,
+      inStock: !productToUpdate.inStock
+    };
+    
+    try {
+      const response = await fetch(`http://localhost:3001/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedProduct),
+      });
+
+      if (response.ok) {
+        setProducts(products.map(p => p.id === id ? updatedProduct : p));
+      } else {
+        console.error("Error al actualizar el stock");
+      }
+    } catch (error) {
+      console.error("Error en la petición de actualización:", error);
+    }
   };
 
   const handleLogin = () => {
