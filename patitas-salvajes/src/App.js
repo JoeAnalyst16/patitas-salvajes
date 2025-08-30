@@ -602,7 +602,7 @@ function App() {
                 </div>
                 <div>
                   <p className="font-semibold">Dirección</p>
-                  <p className="text-gray-600">Av. Providencia 1234, Santiago, Chile</p>
+                  <p className="text-gray-600">Chiguayante, Concepción, Chile</p>
                 </div>
               </div>
 
@@ -724,15 +724,15 @@ function App() {
       <header className="bg-white shadow-lg border-b-4 border-green-600 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-green-600 p-3 rounded-full">
-                <span className="text-white text-2xl">🐾</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">Patitas Salvajes</h1>
-                <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
-              </div>
-            </div>
+          <div className="flex items-center space-x-3">
+  {/* Reemplaza la URL a continuación con la URL directa de la imagen que quieres usar */}
+  <img src="https://github.com/JoeAnalyst16/Projects/blob/main/patitas%20jpg.jpg?raw=true" alt="Logo de Patitas Salvajes" className="h-16" />
+  
+  <div>
+    <h1 className="text-3xl font-bold text-gray-800">Patitas Salvajes</h1>
+    <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
+  </div>
+</div>
             
             {/* Navigation */}
             <nav className="hidden md:flex space-x-8">
@@ -912,9 +912,11 @@ function App() {
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700">
                   <span className="text-white text-sm">f</span>
                 </div>
-                <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
-                  <span className="text-white text-sm">@</span>
-                </div>
+                <a href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3" target="_blank" rel="noopener noreferrer">
+  <div class="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
+    <span class="text-white text-sm">@</span>
+  </div>
+</a>
                 <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500">
                   <span className="text-white text-sm">t</span>
                 </div>
@@ -955,6 +957,9 @@ function App() {
             <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
           </div>
         </div>
-      </footer>
+        </footer>
     </div>
   );
+}
+
+export default App;
