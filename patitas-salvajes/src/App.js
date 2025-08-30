@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, Star } from "lucide-react";
+import { Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, Star, Loader, Image as ImageIcon } from "lucide-react";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { db, storage } from "./firebase";
 
 function App() {
   const [currentPage, setCurrentPage] = useState("home");
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -33,81 +37,71 @@ function App() {
     { id: "higiene", name: "Higiene" }
   ];
 
-  // --- Funciones de manejo ---
-
-  // Carga los productos desde el servidor JSON al iniciar la aplicación
+  // Cargar productos desde Firestore en tiempo real
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/products");
-        if (!response.ok) {
-          throw new Error("No se pudo conectar al servidor JSON.");
-        }
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Error al cargar los productos:", error);
-      }
-    };
-    fetchProducts();
+    const productsCollection = collection(db, "products");
+    const unsubscribe = onSnapshot(productsCollection, (querySnapshot) => {
+      const productsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setProducts(productsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error al cargar los productos:", error);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData({ ...formData, image: event.target.result });
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+
+    try {
+      const storageRef = ref(storage, `images/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(storageRef);
+      setFormData({ ...formData, image: imageUrl });
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleDeleteImage = async () => {
+    const imageRef = ref(storage, formData.image);
+    try {
+      await deleteObject(imageRef);
+      setFormData({ ...formData, image: "" });
+    } catch (error) {
+      console.error("Error al eliminar la imagen:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!formData.name || !formData.price) {
       alert("Por favor completa todos los campos obligatorios");
       return;
     }
 
     try {
-      let url = "http://localhost:3001/products";
-      let method = "POST";
-
       if (editingProduct) {
-        url = `http://localhost:3001/products/${editingProduct.id}`;
-        method = "PUT";
-      }
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        // Vuelve a cargar los productos para reflejar los cambios
-        const updatedProducts = await fetch("http://localhost:3001/products").then(res => res.json());
-        setProducts(updatedProducts);
-        
-        // Limpia el formulario y el estado
-        setFormData({
-          name: "",
-          price: "",
-          description: "",
-          image: "",
-          stock: 0,
-          inStock: true,
-          category: "alimento"
-        });
-        setEditingProduct(null);
-        setShowForm(false);
+        const productDoc = doc(db, "products", editingProduct.id);
+        await updateDoc(productDoc, formData);
       } else {
-        console.error("Error al guardar el producto");
+        await addDoc(collection(db, "products"), { ...formData });
       }
+
+      setFormData({
+        name: "",
+        price: "",
+        description: "",
+        image: "",
+        stock: 0,
+        inStock: true,
+        category: "alimento"
+      });
+      setEditingProduct(null);
+      setShowForm(false);
     } catch (error) {
-      console.error("Error en la petición:", error);
+      console.error("Error al guardar el producto:", error);
     }
   };
 
@@ -129,46 +123,21 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm("¿Seguro que quieres eliminar este producto?")) {
       try {
-        const response = await fetch(`http://localhost:3001/products/${id}`, {
-          method: "DELETE",
-        });
-        if (response.ok) {
-          // Actualiza el estado después de la eliminación exitosa
-          setProducts(products.filter((p) => p.id !== id));
-        } else {
-          console.error("Error al eliminar el producto");
-        }
+        await deleteDoc(doc(db, "products", id));
       } catch (error) {
-        console.error("Error en la petición de eliminación:", error);
+        console.error("Error al eliminar el producto:", error);
       }
     }
   };
 
-  const toggleStock = async (id) => {
-    const productToUpdate = products.find(p => p.id === id);
-    if (!productToUpdate) return;
-
-    const updatedProduct = {
-      ...productToUpdate,
-      inStock: !productToUpdate.inStock
-    };
-    
+  const toggleStock = async (id, currentStock) => {
     try {
-      const response = await fetch(`http://localhost:3001/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedProduct),
+      const productDoc = doc(db, "products", id);
+      await updateDoc(productDoc, {
+        inStock: !currentStock,
       });
-
-      if (response.ok) {
-        setProducts(products.map(p => p.id === id ? updatedProduct : p));
-      } else {
-        console.error("Error al actualizar el stock");
-      }
     } catch (error) {
-      console.error("Error en la petición de actualización:", error);
+      console.error("Error al actualizar el stock:", error);
     }
   };
 
@@ -189,7 +158,6 @@ function App() {
     }
   };
 
-  // Filtrar productos
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -197,10 +165,8 @@ function App() {
     return matchesSearch && matchesCategory;
   });
 
-  // --- Componentes de página ---
   const HomePage = () => (
     <div className="space-y-16">
-      {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-green-600 via-green-500 to-blue-500 text-white py-24 rounded-2xl overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-4xl mx-auto text-center px-6">
@@ -222,7 +188,6 @@ function App() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="grid md:grid-cols-3 gap-8">
         <div className="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow">
           <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -249,7 +214,6 @@ function App() {
         </div>
       </section>
 
-      {/* Productos destacados */}
       <section>
         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Productos Destacados</h2>
         <div className="grid md:grid-cols-3 gap-6">
@@ -300,7 +264,6 @@ function App() {
         )}
       </div>
 
-      {/* Filtros y búsqueda */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -332,9 +295,8 @@ function App() {
         </div>
       </div>
 
-      {/* Formulario de producto */}
       {showForm && (
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <Package className="w-6 h-6 text-green-600" />
             <h2 className="text-2xl font-bold text-gray-800">
@@ -354,6 +316,7 @@ function App() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                   placeholder="Ej: Alimento Premium para Perros"
+                  required
                 />
               </div>
 
@@ -369,6 +332,7 @@ function App() {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full border-2 border-gray-200 p-3 pl-8 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
                     placeholder="0"
+                    required
                   />
                 </div>
               </div>
@@ -429,7 +393,8 @@ function App() {
                         className="w-32 h-32 object-cover mx-auto rounded-lg shadow-md"
                       />
                       <button
-                        onClick={() => setFormData({ ...formData, image: "" })}
+                        type="button"
+                        onClick={handleDeleteImage}
                         className="text-red-500 hover:text-red-700 text-sm"
                       >
                         Eliminar imagen
@@ -444,7 +409,7 @@ function App() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e) => handleImageUpload(e.target.files[0])}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                 </div>
@@ -467,7 +432,7 @@ function App() {
 
           <div className="flex gap-3 pt-6 border-t mt-6">
             <button
-              onClick={handleSubmit}
+              type="submit"
               className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg transition-all hover:shadow-xl"
             >
               <Save className="w-5 h-5" />
@@ -475,6 +440,7 @@ function App() {
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 setShowForm(false);
                 setEditingProduct(null);
@@ -485,107 +451,113 @@ function App() {
               Cancelar
             </button>
           </div>
-        </div>
+        </form>
       )}
-
-      {/* Lista de productos */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.length === 0 && (
-          <div className="col-span-full text-center py-12">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-xl text-gray-500">No hay productos disponibles</p>
-            <p className="text-gray-400">
-              {adminMode ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' : 'Pronto tendremos productos disponibles'}
-            </p>
-          </div>
-        )}
-        
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl ${
-              !product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
-            }`}
-          >
-            <div className="relative h-48 bg-gray-100">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Package className="w-16 h-16 text-gray-300" />
-                </div>
-              )}
-              
-              <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
-                product.inStock 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-red-500 text-white'
-              }`}>
-                {product.inStock ? (
-                  <div className="flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    Disponible
-                  </div>
+      
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader className="w-10 h-10 animate-spin text-green-500" />
+          <p className="ml-4 text-gray-500">Cargando productos...</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-xl text-gray-500">No hay productos disponibles</p>
+              <p className="text-gray-400">
+                {adminMode ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' : 'Pronto tendremos productos disponibles'}
+              </p>
+            </div>
+          )}
+          
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl ${
+                !product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
+              }`}
+            >
+              <div className="relative h-48 bg-gray-100">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <div className="flex items-center gap-1">
-                    <X className="w-3 h-3" />
-                    Sin Stock
+                  <div className="flex items-center justify-center h-full">
+                    <ImageIcon className="w-16 h-16 text-gray-300" />
+                  </div>
+                )}
+                
+                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
+                  product.inStock 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-red-500 text-white'
+                }`}>
+                  {product.inStock ? (
+                    <div className="flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      Disponible
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <X className="w-3 h-3" />
+                      Sin Stock
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-2">
+                  <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                    {categories.find(cat => cat.id === product.category)?.name || 'Sin categoría'}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{product.name}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-3">${product.price}</p>
+                
+                {product.stock !== undefined && (
+                  <p className="text-sm text-gray-600 mb-3">
+                    Stock: <span className="font-semibold">{product.stock} unidades</span>
+                  </p>
+                )}
+                
+                <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+
+                {adminMode && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <button
+                      onClick={() => toggleStock(product.id, product.inStock)}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        product.inStock
+                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      }`}
+                    >
+                      {product.inStock ? 'Sin stock' : 'Disponible'}
+                    </button>
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="p-6">
-              <div className="mb-2">
-                <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
-                  {categories.find(cat => cat.id === product.category)?.name || 'Sin categoría'}
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{product.name}</h3>
-              <p className="text-2xl font-bold text-green-600 mb-3">${product.price}</p>
-              
-              {product.stock !== undefined && (
-                <p className="text-sm text-gray-600 mb-3">
-                  Stock: <span className="font-semibold">{product.stock} unidades</span>
-                </p>
-              )}
-              
-              <p className="text-gray-600 text-sm mb-4">{product.description}</p>
-
-              {adminMode && (
-                <div className="flex gap-2 pt-4 border-t">
-                  <button
-                    onClick={() => toggleStock(product.id)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      product.inStock
-                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                    }`}
-                  >
-                    {product.inStock ? 'Sin stock' : 'Disponible'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -600,7 +572,6 @@ function App() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-12">
-        {/* Información de contacto */}
         <div className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Información de Contacto</h2>
@@ -661,7 +632,6 @@ function App() {
           </div>
         </div>
 
-        {/* Formulario de contacto */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Envíanos un mensaje</h2>
           
@@ -731,7 +701,6 @@ function App() {
         </div>
       </div>
 
-      {/* Mapa o información adicional */}
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
         <h3 className="text-2xl font-bold text-gray-800 mb-4">Visítanos</h3>
         <p className="text-gray-600 mb-6">
@@ -750,21 +719,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
       <header className="bg-white shadow-lg border-b-4 border-green-600 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-  {/* Reemplaza la URL a continuación con la URL directa de la imagen que quieres usar */}
-  <img src="https://github.com/JoeAnalyst16/Projects/blob/main/patitas%20jpg.jpg?raw=true" alt="Logo de Patitas Salvajes" className="h-16" />
-  
-  <div>
-    <h1 className="text-3xl font-bold text-gray-800">Patitas Salvajes</h1>
-    <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
-  </div>
-</div>
+            <div className="flex items-center space-x-3">
+              <img src="https://github.com/JoeAnalyst16/Projects/blob/main/patitas%20jpg.jpg?raw=true" alt="Logo de Patitas Salvajes" className="h-16" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Patitas Salvajes</h1>
+                <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
+              </div>
+            </div>
             
-            {/* Navigation */}
             <nav className="hidden md:flex space-x-8">
               <button
                 onClick={() => setCurrentPage("home")}
@@ -818,7 +783,6 @@ function App() {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
           <nav className="md:hidden mt-4 flex justify-center space-x-6">
             <button
               onClick={() => setCurrentPage("home")}
@@ -857,14 +821,12 @@ function App() {
         </div>
       </header>
 
-      {/* Admin Mode Indicator */}
       {adminMode && (
         <div className="bg-red-500 text-white text-center py-2 text-sm font-semibold">
           🔒 MODO ADMINISTRADOR ACTIVO
         </div>
       )}
 
-      {/* Modal Login Admin */}
       {showLogin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative">
@@ -916,14 +878,12 @@ function App() {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto p-6">
         {currentPage === "home" && <HomePage />}
         {currentPage === "productos" && <ProductosPage />}
         {currentPage === "contacto" && <ContactoPage />}
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-800 text-white py-12 mt-16">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
@@ -943,10 +903,10 @@ function App() {
                   <span className="text-white text-sm">f</span>
                 </div>
                 <a href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3" target="_blank" rel="noopener noreferrer">
-  <div class="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
-    <span class="text-white text-sm">@</span>
-  </div>
-</a>
+                  <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
+                    <span className="text-white text-sm">@</span>
+                  </div>
+                </a>
                 <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500">
                   <span className="text-white text-sm">t</span>
                 </div>
@@ -987,7 +947,7 @@ function App() {
             <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
           </div>
         </div>
-        </footer>
+      </footer>
     </div>
   );
 }
