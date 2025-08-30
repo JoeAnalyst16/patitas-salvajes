@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { 
-  Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock, 
-  AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock, 
+import {
+  Save, Upload, Package, Check, X, Edit, Trash2, Plus, Lock,
+  AlertTriangle, Home, ShoppingBag, Mail, Phone, MapPin, Clock,
   Star, Loader, Image as ImageIcon, Search, Filter
 } from "lucide-react";
-import { 
-  collection, addDoc, getDocs, deleteDoc, doc, 
-  updateDoc, onSnapshot, query, orderBy 
+import {
+  collection, addDoc, getDocs, deleteDoc, doc,
+  updateDoc, onSnapshot, query, orderBy
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "./firebase";
@@ -61,50 +61,50 @@ function App() {
   useEffect(() => {
     const productsCollection = collection(db, "products");
     const q = query(productsCollection, orderBy("name", "asc"));
-    
-    const unsubscribe = onSnapshot(q, 
+
+    const unsubscribe = onSnapshot(q,
       (querySnapshot) => {
-        const productsData = querySnapshot.docs.map((doc) => ({ 
-          id: doc.id, 
-          ...doc.data() 
+        const productsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
         }));
         setProducts(productsData);
         setLoading(false);
-      }, 
+      },
       (error) => {
         console.error("Error al cargar los productos:", error);
-        setNotification({ 
-          show: true, 
-          message: "Error al cargar productos", 
-          type: "error" 
+        setNotification({
+          show: true,
+          message: "Error al cargar productos",
+          type: "error"
         });
         setLoading(false);
       }
     );
-    
+
     return () => unsubscribe();
   }, []);
 
   // Función optimizada para subir imagen
   const handleImageUpload = useCallback(async (file) => {
     if (!file) return;
-    
+
     // Validar tipo y tamaño
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      setNotification({ 
-        show: true, 
-        message: "Por favor sube una imagen válida (JPG, PNG, GIF, WEBP)", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "Por favor sube una imagen válida (JPG, PNG, GIF, WEBP)",
+        type: "error"
       });
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) { // 5MB
-      setNotification({ 
-        show: true, 
-        message: "La imagen no debe superar los 5MB", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "La imagen no debe superar los 5MB",
+        type: "error"
       });
       return;
     }
@@ -116,17 +116,17 @@ function App() {
       await uploadBytes(storageRef, file);
       const imageUrl = await getDownloadURL(storageRef);
       setFormData(prev => ({ ...prev, image: imageUrl }));
-      setNotification({ 
-        show: true, 
-        message: "Imagen subida correctamente", 
-        type: "success" 
+      setNotification({
+        show: true,
+        message: "Imagen subida correctamente",
+        type: "success"
       });
     } catch (error) {
       console.error("Error al subir la imagen:", error);
-      setNotification({ 
-        show: true, 
-        message: "Error al subir la imagen", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "Error al subir la imagen",
+        type: "error"
       });
     } finally {
       setUploading(false);
@@ -135,15 +135,15 @@ function App() {
 
   const handleDeleteImage = useCallback(async () => {
     if (!formData.image) return;
-    
+
     try {
       const imageRef = ref(storage, formData.image);
       await deleteObject(imageRef);
       setFormData(prev => ({ ...prev, image: "" }));
-      setNotification({ 
-        show: true, 
-        message: "Imagen eliminada", 
-        type: "success" 
+      setNotification({
+        show: true,
+        message: "Imagen eliminada",
+        type: "success"
       });
     } catch (error) {
       console.error("Error al eliminar la imagen:", error);
@@ -153,12 +153,12 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.price) {
-      setNotification({ 
-        show: true, 
-        message: "Por favor completa todos los campos obligatorios", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "Por favor completa todos los campos obligatorios",
+        type: "error"
       });
       return;
     }
@@ -175,20 +175,20 @@ function App() {
 
       if (editingProduct) {
         await updateDoc(doc(db, "products", editingProduct.id), productData);
-        setNotification({ 
-          show: true, 
-          message: "Producto actualizado correctamente", 
-          type: "success" 
+        setNotification({
+          show: true,
+          message: "Producto actualizado correctamente",
+          type: "success"
         });
       } else {
         await addDoc(collection(db, "products"), {
           ...productData,
           createdAt: new Date().toISOString()
         });
-        setNotification({ 
-          show: true, 
-          message: "Producto creado correctamente", 
-          type: "success" 
+        setNotification({
+          show: true,
+          message: "Producto creado correctamente",
+          type: "success"
         });
       }
 
@@ -206,10 +206,10 @@ function App() {
       setShowForm(false);
     } catch (error) {
       console.error("Error al guardar el producto:", error);
-      setNotification({ 
-        show: true, 
-        message: "Error al guardar el producto", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "Error al guardar el producto",
+        type: "error"
       });
     } finally {
       setSaving(false);
@@ -236,17 +236,17 @@ function App() {
     if (window.confirm(`¿Estás seguro de eliminar "${productName}"?`)) {
       try {
         await deleteDoc(doc(db, "products", id));
-        setNotification({ 
-          show: true, 
-          message: "Producto eliminado", 
-          type: "success" 
+        setNotification({
+          show: true,
+          message: "Producto eliminado",
+          type: "success"
         });
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
-        setNotification({ 
-          show: true, 
-          message: "Error al eliminar el producto", 
-          type: "error" 
+        setNotification({
+          show: true,
+          message: "Error al eliminar el producto",
+          type: "error"
         });
       }
     }
@@ -258,17 +258,17 @@ function App() {
         inStock: !currentStock,
         updatedAt: new Date().toISOString()
       });
-      setNotification({ 
-        show: true, 
-        message: `Stock ${!currentStock ? 'habilitado' : 'deshabilitado'}`, 
-        type: "success" 
+      setNotification({
+        show: true,
+        message: `Stock ${!currentStock ? 'habilitado' : 'deshabilitado'}`,
+        type: "success"
       });
     } catch (error) {
       console.error("Error al actualizar el stock:", error);
-      setNotification({ 
-        show: true, 
-        message: "Error al actualizar el stock", 
-        type: "error" 
+      setNotification({
+        show: true,
+        message: "Error al actualizar el stock",
+        type: "error"
       });
     }
   }, []);
@@ -279,10 +279,10 @@ function App() {
       setShowLogin(false);
       setPassword("");
       setError("");
-      setNotification({ 
-        show: true, 
-        message: "Sesión de administrador iniciada", 
-        type: "success" 
+      setNotification({
+        show: true,
+        message: "Sesión de administrador iniciada",
+        type: "success"
       });
     } else {
       setError("Clave incorrecta, intenta de nuevo.");
@@ -299,10 +299,10 @@ function App() {
     setAdminMode(false);
     setShowForm(false);
     setEditingProduct(null);
-    setNotification({ 
-      show: true, 
-      message: "Sesión cerrada", 
-      type: "info" 
+    setNotification({
+      show: true,
+      message: "Sesión cerrada",
+      type: "info"
     });
   };
 
@@ -310,10 +310,10 @@ function App() {
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         product.name.toLowerCase().includes(searchLower) ||
         product.description.toLowerCase().includes(searchLower);
-      const matchesCategory = 
+      const matchesCategory =
         selectedCategory === "todos" || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -368,6 +368,36 @@ function App() {
         </div>
       </section>
 
+      {/* SECCIÓN DE IDENTIDAD VISUAL */}
+      <section className="py-10 bg-gray-50">
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
+          Nuestra Identidad
+        </h2>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-6">
+          <div className="bg-white p-4 rounded-2xl shadow-md flex items-center justify-center">
+            <img
+              src="https://github.com/JoeAnalyst16/Projects/blob/main/Imagen%20de%20WhatsApp%202025-08-29%20a%20las%2021.38.20_2f0601b6.jpg?raw=true"
+              alt="Imagen institucional 1"
+              className="max-h-48 object-contain"
+            />
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md flex items-center justify-center">
+            <img
+              src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true"
+              alt="Imagen institucional 2"
+              className="max-h-48 object-contain"
+            />
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md flex items-center justify-center">
+            <img
+              src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-03-03.png?raw=true"
+              alt="Imagen institucional 3"
+              className="max-h-48 object-contain"
+            />
+          </div>
+        </div>
+      </section>
+
       <section>
         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Productos Destacados</h2>
         <div className="grid md:grid-cols-3 gap-6">
@@ -408,7 +438,7 @@ function App() {
     <div className="space-y-8 animate-fadeIn">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Nuestros Productos</h1>
-        
+
         {adminMode && !showForm && (
           <button
             onClick={() => setShowForm(true)}
@@ -632,14 +662,14 @@ function App() {
               onClick={() => {
                 setShowForm(false);
                 setEditingProduct(null);
-                setFormData({ 
-                  name: "", 
-                  price: "", 
-                  description: "", 
-                  image: "", 
-                  stock: 0, 
-                  inStock: true, 
-                  category: "alimento" 
+                setFormData({
+                  name: "",
+                  price: "",
+                  description: "",
+                  image: "",
+                  stock: 0,
+                  inStock: true,
+                  category: "alimento"
                 });
               }}
               className="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -649,7 +679,7 @@ function App() {
           </div>
         </form>
       )}
-      
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader className="w-10 h-10 animate-spin text-green-500" />
@@ -661,26 +691,25 @@ function App() {
             <div className="col-span-full text-center py-12">
               <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-xl text-gray-500">
-                {searchTerm || selectedCategory !== "todos" 
-                  ? "No se encontraron productos con los filtros aplicados" 
+                {searchTerm || selectedCategory !== "todos"
+                  ? "No se encontraron productos con los filtros aplicados"
                   : "No hay productos disponibles"}
               </p>
               <p className="text-gray-400 mt-2">
                 {adminMode && !searchTerm && selectedCategory === "todos"
-                  ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"' 
+                  ? 'Agrega tu primer producto haciendo clic en "Nuevo Producto"'
                   : searchTerm || selectedCategory !== "todos"
-                  ? 'Intenta con otros términos de búsqueda o categorías'
-                  : 'Pronto tendremos productos disponibles'}
+                    ? 'Intenta con otros términos de búsqueda o categorías'
+                    : 'Pronto tendremos productos disponibles'}
               </p>
             </div>
           )}
-          
+
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl transform hover:-translate-y-1 ${
-                !product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
-              }`}
+              className={`bg-white rounded-xl shadow-lg overflow-hidden border transition-all hover:shadow-xl transform hover:-translate-y-1 ${!product.inStock ? 'opacity-75 border-red-200' : 'border-gray-200'
+                }`}
             >
               <div className="relative h-48 bg-gray-100">
                 {product.image ? (
@@ -695,12 +724,11 @@ function App() {
                     <ImageIcon className="w-16 h-16 text-gray-300" />
                   </div>
                 )}
-                
-                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
-                  product.inStock 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-red-500 text-white'
-                }`}>
+
+                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${product.inStock
+                  ? 'bg-green-500 text-white'
+                  : 'bg-red-500 text-white'
+                  }`}>
                   {product.inStock ? (
                     <div className="flex items-center gap-1">
                       <Check className="w-3 h-3" />
@@ -714,8 +742,7 @@ function App() {
                   )}
                 </div>
               </div>
-              
-              {/* --- START OF MISSING CODE --- */}
+
               <div className="p-6">
                 <h3 className="font-bold text-xl mb-2 truncate" title={product.name}>{product.name}</h3>
                 <p className="text-2xl font-bold text-green-600 mb-3">${new Intl.NumberFormat('es-CL').format(product.price)}</p>
@@ -738,8 +765,6 @@ function App() {
                   </button>
                 </div>
               )}
-               {/* --- END OF MISSING CODE --- */}
-
             </div>
           ))}
         </div>
@@ -752,7 +777,7 @@ function App() {
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Contáctanos</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          ¿Tienes preguntas sobre nuestros productos? ¿Necesitas asesoría veterinaria? 
+          ¿Tienes preguntas sobre nuestros productos? ¿Necesitas asesoría veterinaria?
           Estamos aquí para ayudarte.
         </p>
       </div>
@@ -761,15 +786,15 @@ function App() {
         <div className="space-y-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Información de Contacto</h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <div className="bg-green-100 p-3 rounded-full">
                   <Phone className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-semibold">Teléfono</p>
-                  <p className="text-gray-600">+56 9 1234 5678</p>
+                  <p className="font-semibold">Teléfono / WhatsApp</p>
+                  <a href="https://wa.me/56982880081" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-green-600">+56 9 8288 0081</a>
                 </div>
               </div>
 
@@ -789,7 +814,7 @@ function App() {
                 </div>
                 <div>
                   <p className="font-semibold">Dirección</p>
-                  <p className="text-gray-600">Chiguayante, Concepción, Chile</p>
+                  <p className="text-gray-600">Av. Manuel Rodrigues 1806, Concepción</p>
                 </div>
               </div>
 
@@ -820,7 +845,7 @@ function App() {
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Envíanos un mensaje</h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -851,7 +876,7 @@ function App() {
               <input
                 type="tel"
                 className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-green-500 focus:outline-none transition-colors"
-                placeholder="+56 9 1234 5678"
+                placeholder="+56 9 8288 0081"
               />
             </div>
 
@@ -890,7 +915,7 @@ function App() {
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
         <h3 className="text-2xl font-bold text-gray-800 mb-4">Visítanos</h3>
         <p className="text-gray-600 mb-6">
-          Te invitamos a conocer nuestra tienda física donde podrás ver todos nuestros productos 
+          Te invitamos a conocer nuestra tienda física donde podrás ver todos nuestros productos
           y recibir asesoría personalizada de nuestros expertos.
         </p>
         <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
@@ -915,37 +940,34 @@ function App() {
                 <p className="text-green-600 font-medium">Productos Veterinarios de Calidad</p>
               </div>
             </div>
-            
+
             <nav className="hidden md:flex space-x-8">
               <button
                 onClick={() => setCurrentPage("home")}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPage === "home" 
-                    ? "bg-green-100 text-green-700" 
-                    : "text-gray-600 hover:text-green-600"
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "home"
+                  ? "bg-green-100 text-green-700"
+                  : "text-gray-600 hover:text-green-600"
+                  }`}
               >
                 <Home className="w-4 h-4" />
                 <span>Inicio</span>
               </button>
               <button
                 onClick={() => setCurrentPage("productos")}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPage === "productos" 
-                    ? "bg-green-100 text-green-700" 
-                    : "text-gray-600 hover:text-green-600"
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "productos"
+                  ? "bg-green-100 text-green-700"
+                  : "text-gray-600 hover:text-green-600"
+                  }`}
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>Productos</span>
               </button>
               <button
                 onClick={() => setCurrentPage("contacto")}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPage === "contacto" 
-                    ? "bg-green-100 text-green-700" 
-                    : "text-gray-600 hover:text-green-600"
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "contacto"
+                  ? "bg-green-100 text-green-700"
+                  : "text-gray-600 hover:text-green-600"
+                  }`}
               >
                 <Mail className="w-4 h-4" />
                 <span>Contacto</span>
@@ -956,11 +978,10 @@ function App() {
               onClick={() =>
                 adminMode ? handleLogout() : setShowLogin(true)
               }
-              className={`px-4 py-2 rounded-lg transition-colors shadow-md ${
-                adminMode
-                  ? "bg-red-500 hover:bg-red-600 text-white"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
+              className={`px-4 py-2 rounded-lg transition-colors shadow-md ${adminMode
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4" />
@@ -972,33 +993,30 @@ function App() {
           <nav className="md:hidden mt-4 flex justify-center space-x-6">
             <button
               onClick={() => setCurrentPage("home")}
-              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
-                currentPage === "home" 
-                  ? "bg-green-100 text-green-700" 
-                  : "text-gray-600"
-              }`}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${currentPage === "home"
+                ? "bg-green-100 text-green-700"
+                : "text-gray-600"
+                }`}
             >
               <Home className="w-5 h-5" />
               <span className="text-xs">Inicio</span>
             </button>
             <button
               onClick={() => setCurrentPage("productos")}
-              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
-                currentPage === "productos" 
-                  ? "bg-green-100 text-green-700" 
-                  : "text-gray-600"
-              }`}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${currentPage === "productos"
+                ? "bg-green-100 text-green-700"
+                : "text-gray-600"
+                }`}
             >
               <ShoppingBag className="w-5 h-5" />
               <span className="text-xs">Productos</span>
             </button>
             <button
               onClick={() => setCurrentPage("contacto")}
-              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
-                currentPage === "contacto" 
-                  ? "bg-green-100 text-green-700" 
-                  : "text-gray-600"
-              }`}
+              className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${currentPage === "contacto"
+                ? "bg-green-100 text-green-700"
+                : "text-gray-600"
+                }`}
             >
               <Mail className="w-5 h-5" />
               <span className="text-xs">Contacto</span>
@@ -1006,6 +1024,17 @@ function App() {
           </nav>
         </div>
       </header>
+
+      {/* HERO CON IMAGEN PRINCIPAL (SOLO EN HOME) */}
+      {currentPage === "home" && (
+        <header className="bg-white shadow">
+          <img
+            src="https://github.com/JoeAnalyst16/Projects/blob/main/LETRERO%20GRANDE%20PATITAS_Mesa%20de%20trabajo%201.jpg?raw=true"
+            alt="Cuidamos a tus Patitas Salvajes"
+            className="w-full object-cover"
+          />
+        </header>
+      )}
 
       {adminMode && (
         <div className="bg-red-500 text-white text-center py-2 text-sm font-semibold">
@@ -1070,72 +1099,20 @@ function App() {
         {currentPage === "contacto" && <ContactoPage />}
       </main>
 
-      <footer className="bg-gray-800 text-white py-12 mt-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-green-600 p-2 rounded-full">
-                  <span className="text-white text-xl">🐾</span>
-                </div>
-                <h3 className="text-xl font-bold">Patitas Salvajes</h3>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Somos una empresa dedicada al bienestar de tus mascotas, ofreciendo productos 
-                veterinarios de la más alta calidad con más de 10 años de experiencia.
-              </p>
-              <div className="flex space-x-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700">
-                  <span className="text-white text-sm">f</span>
-                </div>
-                <a
-                  href="https://www.instagram.com/farmaciapatitassalvajes?igsh=OHNuYTZsbGp1MWU3"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-700">
-                    <span className="text-white text-sm">@</span>
-                  </div>
-                </a>
-                <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500">
-                  <span className="text-white text-sm">t</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><button onClick={() => setCurrentPage("home")} className="hover:text-white transition-colors">Inicio</button></li>
-                <li><button onClick={() => setCurrentPage("productos")} className="hover:text-white transition-colors">Productos</button></li>
-                <li><button onClick={() => setCurrentPage("contacto")} className="hover:text-white transition-colors">Contacto</button></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Contacto</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4" />
-                  <span>+56 9 1234 5678</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4" />
-                  <span>contacto@patitassalvajes.cl</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>Santiago, Chile</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-700 pt-8 text-center">
-            <p className="text-gray-400">© 2025 Patitas Salvajes. Todos los derechos reservados.</p>
-            <p className="text-sm text-gray-500 mt-2">Cuidando a tus mascotas con productos de calidad</p>
-          </div>
+      {/* FOOTER ACTUALIZADO */}
+      <footer className="bg-gray-800 text-white py-6 mt-10">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm">
+            📍 Av. Manuel Rodrigues 1806, Concepción
+          </p>
+          <a
+            href="https://wa.me/56982880081"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-green-400 font-semibold mt-2 md:mt-0"
+          >
+            📞 +56 9 8288 0081 (WhatsApp)
+          </a>
         </div>
       </footer>
     </div>
