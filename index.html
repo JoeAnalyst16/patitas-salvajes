@@ -1,572 +1,587 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patitas Salvajes - Clínica Veterinaria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .modal-backdrop {
-            background-color: rgba(0,0,0,0.5);
-            -webkit-backdrop-filter: blur(2px);
-            backdrop-filter: blur(2px);
-        }
-        .upload-spinner {
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patitas Salvajes - Clínica Veterinaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+        }
+        .upload-spinner {
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <img src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true" alt="Logo Patitas Salvajes" class="h-16 w-auto">
-                <h1 class="text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
-            </div>
-            <div id="auth-status" class="text-sm text-gray-500 font-semibold">
-                Conectando...
-            </div>
-        </div>
-    </header>
+        <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true" alt="Logo Patitas Salvajes" class="h-16 w-auto">
+                <h1 class="text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
+            </div>
+            <div id="auth-status" class="text-sm text-gray-500 font-semibold">
+                Conectando...
+            </div>
+        </div>
+    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto p-4 md:p-6">
-        
-        <!-- Navigation -->
-        <nav class="bg-white p-2 rounded-lg shadow-md mb-6">
-            <div class="flex justify-center space-x-1 md:space-x-4">
-                <button data-view="patients" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold bg-teal-500 text-white shadow-sm hover:bg-teal-600 transition-colors flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
-                    Pacientes
-                </button>
-                <button data-view="appointments" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
-                    Citas
-                </button>
-                <button data-view="admin" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 11-12 0 6 6 0 0112 0zM7 8a3 3 0 116 0 3 3 0 01-6 0zM5.5 16a4.5 4.5 0 016.58-3.32.75.75 0 10-1.16-1.36A3 3 0 008.5 14.5a3 3 0 00-3.32 2.58.75.75 0 101.36.32A1.5 1.5 0 018.5 16a1.5 1.5 0 01-3-1.42V14.5a.75.75 0 00-1.5 0v.08A4.5 4.5 0 015.5 16z" clip-rule="evenodd" /></svg>
-                    Admin
-                </button>
-            </div>
-        </nav>
+        <main class="container mx-auto p-4 md:p-6">
+        
+                <nav class="bg-white p-2 rounded-lg shadow-md mb-6">
+            <div class="flex justify-center space-x-1 md:space-x-4">
+                <button data-view="patients" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold bg-teal-500 text-white shadow-sm hover:bg-teal-600 transition-colors flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
+                    Pacientes
+                </button>
+                <button data-view="appointments" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
+                    Citas
+                </button>
+                <button data-view="admin" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 11-12 0 6 6 0 0112 0zM7 8a3 3 0 116 0 3 3 0 01-6 0zM5.5 16a4.5 4.5 0 016.58-3.32.75.75 0 10-1.16-1.36A3 3 0 008.5 14.5a3 3 0 00-3.32 2.58.75.75 0 101.36.32A1.5 1.5 0 018.5 16a1.5 1.5 0 01-3-1.42V14.5a.75.75 0 00-1.5 0v.08A4.5 4.5 0 015.5 16z" clip-rule="evenodd" /></svg>
+                    Admin
+                </button>
+            </div>
+        </nav>
 
-        <!-- Views Container -->
-        <div id="views-container">
-            <!-- Patients View -->
-            <div id="patients-view" class="view-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
-                    <button id="add-patient-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-colors font-semibold">
-                        Nuevo Paciente
-                    </button>
-                </div>
-                <div id="patients-list" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <p class="p-8 text-center text-gray-500">Cargando pacientes...</p>
-                </div>
-            </div>
+                <div id="views-container">
+                        <div id="patients-view" class="view-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
+                    <button id="add-patient-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-colors font-semibold">
+                        Nuevo Paciente
+                    </button>
+                </div>
+                <div id="patients-list" class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <p class="p-8 text-center text-gray-500">Cargando pacientes...</p>
+                </div>
+            </div>
 
-            <!-- Appointments View -->
-            <div id="appointments-view" class="view-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Agenda de Citas</h2>
-                    <button id="add-appointment-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors font-semibold">
-                        Nueva Cita
-                    </button>
-                </div>
-                <div id="appointments-list" class="bg-white rounded-lg shadow-md overflow-hidden">
-                     <p class="p-8 text-center text-gray-500">Cargando citas...</p>
-                </div>
-            </div>
+                        <div id="appointments-view" class="view-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-700">Agenda de Citas</h2>
+                    <button id="add-appointment-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors font-semibold">
+                        Nueva Cita
+                    </button>
+                </div>
+                <div id="appointments-list" class="bg-white rounded-lg shadow-md overflow-hidden">
+                     <p class="p-8 text-center text-gray-500">Cargando citas...</p>
+                </div>
+            </div>
 
-            <!-- Admin View -->
-            <div id="admin-view" class="view-content hidden">
-                <h2 class="text-2xl font-bold text-gray-700 mb-4">Panel de Administración</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Chat Admin -->
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-3">Chat Veterinario</h3>
-                        <div id="admin-chat-list" class="h-96 overflow-y-auto space-y-3 p-2 border rounded-md bg-gray-50">
-                            <!-- Messages here -->
-                        </div>
-                    </div>
-                    <!-- Supplies Admin -->
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-3">Insumos Médicos</h3>
-                        <form id="supply-form" class="mb-4 p-3 border rounded-md">
-                            <label for="supply-image" class="block text-sm font-medium text-gray-700">Subir nueva imagen de insumo:</label>
-                            <input type="file" id="supply-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" required>
-                            <button type="submit" id="supply-submit-btn" class="mt-3 w-full px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-sm hover:bg-indigo-600 transition-colors font-semibold flex items-center justify-center">
-                                <span id="supply-submit-text">Subir Insumo</span>
-                                <div id="supply-submit-spinner" class="w-5 h-5 rounded-full border-2 border-white upload-spinner hidden ml-2"></div>
-                            </button>
-                        </form>
-                        <div id="supplies-list" class="grid grid-cols-2 md:grid-cols-3 gap-4 h-80 overflow-y-auto p-2 border rounded-md bg-gray-50">
-                            <!-- Supply images here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        <div id="admin-view" class="view-content hidden">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Panel de Administración</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold mb-3">Chat Veterinario</h3>
+                        <div id="admin-chat-list" class="h-96 overflow-y-auto space-y-3 p-2 border rounded-md bg-gray-50">
+                                                    </div>
+                    </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold mb-3">Insumos Médicos</h3>
+                        <form id="supply-form" class="mb-4 p-3 border rounded-md">
+                            <label for="supply-name" class="block text-sm font-medium text-gray-700">Nombre del Insumo:</label>
+                            <input type="text" id="supply-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
 
-    </main>
+                            <label for="supply-description" class="block text-sm font-medium text-gray-700 mt-4">Descripción:</label>
+                            <textarea id="supply-description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
 
-    <!-- Floating Chat Button -->
-    <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-    </button>
-    
-    <!-- Footer -->
-    <footer class="mt-8 py-8 bg-white border-t">
-      <div class="container mx-auto px-6 text-gray-500">
-        <div class="grid md:grid-cols-3 gap-6 text-sm text-center">
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Contáctanos</h4>
-                <a href="https://wa.me/56977638154" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2C5.582 2 2 5.582 2 10c0 1.58.44 3.06.945 4.383L2 20l5.617-.945A7.96 7.96 0 0010 18c4.418 0 8-3.582 8-8s-3.582-8-8-8zm4.02 9.22c-.18.42-.87.81-1.04.83-.17.02-1.03-.27-1.95-1.18-.92-.91-1.5-2.03-1.63-2.36-.13-.33 0-.5.14-.64.13-.14.28-.35.42-.48.14-.13.18-.23.27-.38.09-.15.05-.28-.02-.38-.07-.1-1.12-1.34-1.3-1.58-.18-.24-.36-.28-.5-.28-.14 0-.3.02-.43.02-.13 0-.33.05-.5.23-.17.18-.68.65-.68 1.58 0 .93.7 1.83.8 1.95.1.12 1.35 2.12 3.28 2.88 1.93.76 1.93.5 2.27.48.34-.02 1.03-.42 1.18-.83.15-.4.15-.75.1-.83-.05-.07-.18-.12-.35-.2z"/></svg>
-                    <span>+56 9 7763 8154</span>
-                </a>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Encuéntranos</h4>
-                <p>Av. Manuel Rodriguez 1886, Concepción</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Síguenos</h4>
-                <a href="https://instagram.com/farmaciapatitassalvajes" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
-                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.99 5.99a.75.75 0 011.06 0L10 8.94l2.95-2.95a.75.75 0 111.06 1.06L11.06 10l2.95 2.95a.75.75 0 11-1.06 1.06L10 11.06l-2.95 2.95a.75.75 0 01-1.06-1.06L8.94 10 5.99 7.05a.75.75 0 010-1.06z" clip-rule="evenodd" /></svg>
-                    <span>@farmaciapatitassalvajes</span>
-                </a>
-            </div>
-        </div>
-        <p class="mt-8 pt-6 border-t border-gray-200 text-center">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
-      </div>
-    </footer>
+                            <label for="supply-price" class="block text-sm font-medium text-gray-700 mt-4">Precio ($):</label>
+                            <input type="number" id="supply-price" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+
+                            <label for="supply-image" class="block text-sm font-medium text-gray-700 mt-4">Subir nueva imagen de insumo:</label>
+                            <input type="file" id="supply-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" required>
+                            <button type="submit" id="supply-submit-btn" class="mt-3 w-full px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-sm hover:bg-indigo-600 transition-colors font-semibold flex items-center justify-center">
+                                <span id="supply-submit-text">Subir Insumo</span>
+                                <div id="supply-submit-spinner" class="w-5 h-5 rounded-full border-2 border-white upload-spinner hidden ml-2"></div>
+                            </button>
+                        </form>
+                        <div id="supplies-list" class="grid grid-cols-2 md:grid-cols-3 gap-4 h-80 overflow-y-auto p-2 border rounded-md bg-gray-50">
+                                                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+        <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+    </button>
+    
+        <footer class="mt-8 py-8 bg-white border-t">
+      <div class="container mx-auto px-6 text-gray-500">
+        <div class="grid md:grid-cols-3 gap-6 text-sm text-center">
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Contáctanos</h4>
+                <a href="https://wa.me/56977638154" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2C5.582 2 2 5.582 2 10c0 1.58.44 3.06.945 4.383L2 20l5.617-.945A7.96 7.96 0 0010 18c4.418 0 8-3.582 8-8s-3.582-8-8-8zm4.02 9.22c-.18.42-.87.81-1.04.83-.17.02-1.03-.27-1.95-1.18-.92-.91-1.5-2.03-1.63-2.36-.13-.33 0-.5.14-.64.13-.14.28-.35.42-.48.14-.13.18-.23.27-.38.09-.15.05-.28-.02-.38-.07-.1-1.12-1.34-1.3-1.58-.18-.24-.36-.28-.5-.28-.14 0-.3.02-.43.02-.13 0-.33.05-.5.23-.17.18-.68.65-.68 1.58 0 .93.7 1.83.8 1.95.1.12 1.35 2.12 3.28 2.88 1.93.76 1.93.5 2.27.48.34-.02 1.03-.42 1.18-.83.15-.4.15-.75.1-.83-.05-.07-.18-.12-.35-.2z"/></svg>
+                    <span>+56 9 7763 8154</span>
+                </a>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Encuéntranos</h4>
+                <p>Av. Manuel Rodriguez 1886, Concepción</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Síguenos</h4>
+                <a href="https://instagram.com/farmaciapatitassalvajes" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
+                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.99 5.99a.75.75 0 011.06 0L10 8.94l2.95-2.95a.75.75 0 111.06 1.06L11.06 10l2.95 2.95a.75.75 0 11-1.06 1.06L10 11.06l-2.95 2.95a.75.75 0 01-1.06-1.06L8.94 10 5.99 7.05a.75.75 0 010-1.06z" clip-rule="evenodd" /></svg>
+                    <span>@farmaciapatitassalvajes</span>
+                </a>
+            </div>
+        </div>
+        <p class="mt-8 pt-6 border-t border-gray-200 text-center">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
+      </div>
+    </footer>
 
 
-    <!-- Modals -->
-    <!-- Patient Modal -->
-    <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
-            <form id="patient-form">
-                <input type="hidden" id="patient-id">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="pet-name" class="block text-sm font-medium text-gray-700">Nombre Mascota</label>
-                        <input type="text" id="pet-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                    <div>
-                        <label for="owner-name" class="block text-sm font-medium text-gray-700">Nombre Dueño</label>
-                        <input type="text" id="owner-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                     <div>
-                        <label for="pet-species" class="block text-sm font-medium text-gray-700">Especie</label>
-                        <input type="text" id="pet-species" placeholder="Ej: Perro, Gato" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                     <div>
-                        <label for="pet-breed" class="block text-sm font-medium text-gray-700">Raza</label>
-                        <input type="text" id="pet-breed" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label for="contact-phone" class="block text-sm font-medium text-gray-700">Teléfono Contacto</label>
-                    <input type="tel" id="contact-phone" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- Appointment Modal -->
-    <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
-            <form id="appointment-form">
-                <input type="hidden" id="appointment-id">
-                <div>
-                    <label for="appointment-patient" class="block text-sm font-medium text-gray-700">Paciente</label>
-                    <select id="appointment-patient" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                        <option value="">Seleccione un paciente...</option>
-                    </select>
-                </div>
-                <div class="mt-4">
-                    <label for="appointment-date" class="block text-sm font-medium text-gray-700">Fecha y Hora</label>
-                    <input type="datetime-local" id="appointment-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                </div>
-                <div class="mt-4">
-                    <label for="appointment-reason" class="block text-sm font-medium text-gray-700">Motivo de la Cita</label>
-                    <textarea id="appointment-reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- Admin Login Modal -->
-    <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm m-4">
-            <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
-            <form id="admin-login-form">
-                <div>
-                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                    <input type="password" id="admin-password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                    <p id="admin-error-msg" class="text-red-500 text-sm mt-1 hidden">Contraseña incorrecta.</p>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Ingresar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- User Chat Modal -->
-    <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
-            <form id="user-chat-form">
-                <div>
-                    <label for="user-chat-name" class="block text-sm font-medium text-gray-700">Tu Nombre</label>
-                    <input type="text" id="user-chat-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                </div>
-                <div class="mt-4">
-                    <label for="user-chat-message" class="block text-sm font-medium text-gray-700">Tu Mensaje</label>
-                    <textarea id="user-chat-message" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Enviar Mensaje</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
+            <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
+            <form id="patient-form">
+                <input type="hidden" id="patient-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="pet-name" class="block text-sm font-medium text-gray-700">Nombre Mascota</label>
+                        <input type="text" id="pet-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                    </div>
+                    <div>
+                        <label for="owner-name" class="block text-sm font-medium text-gray-700">Nombre Dueño</label>
+                        <input type="text" id="owner-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                    </div>
+                     <div>
+                        <label for="pet-species" class="block text-sm font-medium text-gray-700">Especie</label>
+                        <input type="text" id="pet-species" placeholder="Ej: Perro, Gato" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                    </div>
+                     <div>
+                        <label for="pet-breed" class="block text-sm font-medium text-gray-700">Raza</label>
+                        <input type="text" id="pet-breed" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="contact-phone" class="block text-sm font-medium text-gray-700">Teléfono Contacto</label>
+                    <input type="tel" id="contact-phone" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                </div>
+                 <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+        <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
+            <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
+            <form id="appointment-form">
+                <input type="hidden" id="appointment-id">
+                <div>
+                    <label for="appointment-patient" class="block text-sm font-medium text-gray-700">Paciente</label>
+                    <select id="appointment-patient" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
+                        <option value="">Seleccione un paciente...</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <label for="appointment-date" class="block text-sm font-medium text-gray-700">Fecha y Hora</label>
+                    <input type="datetime-local" id="appointment-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
+                </div>
+                <div class="mt-4">
+                    <label for="appointment-reason" class="block text-sm font-medium text-gray-700">Motivo de la Cita</label>
+                    <textarea id="appointment-reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+        <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm m-4">
+            <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
+            <form id="admin-login-form">
+                <div>
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="admin-password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <p id="admin-error-msg" class="text-red-500 text-sm mt-1 hidden">Contraseña incorrecta.</p>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Ingresar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+        <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
+            <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
+            <form id="user-chat-form">
+                <div>
+                    <label for="user-chat-name" class="block text-sm font-medium text-gray-700">Tu Nombre</label>
+                    <input type="text" id="user-chat-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
+                </div>
+                <div class="mt-4">
+                    <label for="user-chat-message" class="block text-sm font-medium text-gray-700">Tu Mensaje</label>
+                    <textarea id="user-chat-message" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
+                </div>
+                 <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Enviar Mensaje</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBQdlG6bEGYIoR_WGzBVCB5V5UHvwC4N3A",
-            authDomain: "patitas-salvajes.firebaseapp.com",
-            projectId: "patitas-salvajes",
-            storageBucket: "patitas-salvajes.appspot.com",
-            messagingSenderId: "862527621880",
-            appId: "1:862527621880:web:17a26cd5f26e4b1909490d",
-            measurementId: "G-44TYF6VMME"
-        };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQdlG6bEGYIoR_WGzBVCB5V5UHvwC4N3A",
+            authDomain: "patitas-salvajes.firebaseapp.com",
+            projectId: "patitas-salvajes",
+            storageBucket: "patitas-salvajes.appspot.com",
+            messagingSenderId: "862527621880",
+            appId: "1:862527621880:web:17a26cd5f26e4b1909490d",
+            measurementId: "G-44TYF6VMME"
+        };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const storage = getStorage(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
 
-        let isAdmin = false;
-        const ADMIN_PASS = "Patitassalvajes1996*";
+        let isAdmin = false;
+        const ADMIN_PASS = "Patitassalvajes1996*";
 
-        // --- Autenticación ---
-        onAuthStateChanged(auth, user => {
-            const authStatus = document.getElementById('auth-status');
-            if (user) {
-                authStatus.textContent = `Conectado`;
-                authStatus.classList.add('text-green-600');
-                loadAllData();
-            } else {
-                authStatus.textContent = `Desconectado`;
-                authStatus.classList.remove('text-green-600');
-                signInAnonymously(auth).catch(error => {
-                    console.error("Error en la autenticación anónima:", error);
-                    authStatus.textContent = `Error de conexión`;
-                });
-            }
-        });
+        // --- Autenticación ---
+        onAuthStateChanged(auth, user => {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                authStatus.textContent = `Conectado`;
+                authStatus.classList.add('text-green-600');
+                loadAllData();
+            } else {
+                authStatus.textContent = `Desconectado`;
+                authStatus.classList.remove('text-green-600');
+                signInAnonymously(auth).catch(error => {
+                    console.error("Error en la autenticación anónima:", error);
+                    authStatus.textContent = `Error de conexión`;
+                });
+            }
+        });
 
-        // --- Elementos del DOM ---
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const views = document.querySelectorAll('.view-content');
-        const allModals = document.querySelectorAll('.fixed.inset-0');
-        
-        // --- Navegación ---
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const viewName = button.dataset.view;
+        // --- Elementos del DOM ---
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const views = document.querySelectorAll('.view-content');
+        const allModals = document.querySelectorAll('.fixed.inset-0');
+        
+        // --- Navegación ---
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const viewName = button.dataset.view;
 
-                if (viewName === 'admin' && !isAdmin) {
-                    openModal('admin-login-modal');
-                    return;
-                }
+                if (viewName === 'admin' && !isAdmin) {
+                    openModal('admin-login-modal');
+                    return;
+                }
 
-                navButtons.forEach(btn => {
-                    btn.classList.remove('bg-teal-500', 'text-white');
-                    btn.classList.add('text-gray-700', 'hover:bg-gray-200');
-                });
-                button.classList.add('bg-teal-500', 'text-white');
-                button.classList.remove('text-gray-700', 'hover:bg-gray-200');
+                navButtons.forEach(btn => {
+                    btn.classList.remove('bg-teal-500', 'text-white');
+                    btn.classList.add('text-gray-700', 'hover:bg-gray-200');
+                });
+                button.classList.add('bg-teal-500', 'text-white');
+                button.classList.remove('text-gray-700', 'hover:bg-gray-200');
 
-                views.forEach(view => {
-                    if (view.id === `${viewName}-view`) {
-                        view.classList.remove('hidden');
-                    } else {
-                        view.classList.add('hidden');
-                    }
-                });
-            });
-        });
+                views.forEach(view => {
+                    if (view.id === `${viewName}-view`) {
+                        view.classList.remove('hidden');
+                    } else {
+                        view.classList.add('hidden');
+                    }
+                });
+            });
+        });
 
-        // --- Lógica de Modales ---
-        const openModal = (modalId) => document.getElementById(modalId)?.classList.replace('hidden', 'flex');
-        const closeModal = () => allModals.forEach(m => m.classList.replace('flex', 'hidden'));
-        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+        // --- Lógica de Modales ---
+        const openModal = (modalId) => document.getElementById(modalId)?.classList.replace('hidden', 'flex');
+        const closeModal = () => allModals.forEach(m => m.classList.replace('flex', 'hidden'));
+        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
 
-        // --- Lógica de Pacientes ---
-        const patientForm = document.getElementById('patient-form');
-        const patientsList = document.getElementById('patients-list');
-        let allPatients = [];
-        
-        const renderPatients = (patients) => {
-            patientsList.innerHTML = '';
-            if (patients.length === 0) {
-                patientsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay pacientes registrados. ¡Añade el primero!</p>`;
-                return;
-            }
-            const table = document.createElement('table');
-            table.className = 'w-full text-left';
-            table.innerHTML = `
-                <thead class="bg-gray-50 border-b">
-                    <tr>
-                        <th class="p-4 font-semibold text-sm">Mascota</th>
-                        <th class="p-4 font-semibold text-sm hidden md:table-cell">Dueño</th>
-                        <th class="p-4 font-semibold text-sm hidden sm:table-cell">Especie/Raza</th>
-                        <th class="p-4 font-semibold text-sm">Acciones</th>
-                    </tr>
-                </thead>
-            `;
-            const tbody = document.createElement('tbody');
-            patients.forEach(patient => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4 font-medium">${patient.petName}</td><td class="p-4 hidden md:table-cell">${patient.ownerName}</td><td class="p-4 hidden sm:table-cell text-sm text-gray-600">${patient.species} / ${patient.breed || 'N/A'}</td><td class="p-4 flex items-center space-x-2"><button data-id="${patient.id}" class="edit-patient-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${patient.id}" class="delete-patient-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-            patientsList.appendChild(table);
-        };
-        
-        const loadPatients = () => {
-            const q = query(collection(db, 'patients'));
-            onSnapshot(q, (querySnapshot) => {
-                allPatients = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPatients(allPatients);
-                updateAppointmentPatientOptions(allPatients);
-            });
-        };
-        
-        patientForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
-        patientsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
+        // --- Lógica de Pacientes ---
+        const patientForm = document.getElementById('patient-form');
+        const patientsList = document.getElementById('patients-list');
+        let allPatients = [];
+        
+        const renderPatients = (patients) => {
+            patientsList.innerHTML = '';
+            if (patients.length === 0) {
+                patientsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay pacientes registrados. ¡Añade el primero!</p>`;
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'w-full text-left';
+            table.innerHTML = `
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="p-4 font-semibold text-sm">Mascota</th>
+                        <th class="p-4 font-semibold text-sm hidden md:table-cell">Dueño</th>
+                        <th class="p-4 font-semibold text-sm hidden sm:table-cell">Especie/Raza</th>
+                        <th class="p-4 font-semibold text-sm">Acciones</th>
+                    </tr>
+                </thead>
+            `;
+            const tbody = document.createElement('tbody');
+            patients.forEach(patient => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `<td class="p-4 font-medium">${patient.petName}</td><td class="p-4 hidden md:table-cell">${patient.ownerName}</td><td class="p-4 hidden sm:table-cell text-sm text-gray-600">${patient.species} / ${patient.breed || 'N/A'}</td><td class="p-4 flex items-center space-x-2"><button data-id="${patient.id}" class="edit-patient-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${patient.id}" class="delete-patient-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            patientsList.appendChild(table);
+        };
+        
+        const loadPatients = () => {
+            const q = query(collection(db, 'patients'));
+            onSnapshot(q, (querySnapshot) => {
+                allPatients = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderPatients(allPatients);
+                updateAppointmentPatientOptions(allPatients);
+            });
+        };
+        
+        patientForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
+        patientsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
 
 
-        // --- Lógica de Citas ---
-        const appointmentForm = document.getElementById('appointment-form');
-        const appointmentsList = document.getElementById('appointments-list');
-        let allAppointments = [];
+        // --- Lógica de Citas ---
+        const appointmentForm = document.getElementById('appointment-form');
+        const appointmentsList = document.getElementById('appointments-list');
+        let allAppointments = [];
 
-        const updateAppointmentPatientOptions = (patients) => {
-            const select = document.getElementById('appointment-patient');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Seleccione un paciente...</option>';
-            patients.forEach(patient => {
-                const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = `${patient.petName} (${patient.ownerName})`;
-                select.appendChild(option);
-            });
-            if (currentValue) {
-                select.value = currentValue;
-            }
-        };
-        
-        const renderAppointments = (appointments) => {
-            appointmentsList.innerHTML = '';
-             if (appointments.length === 0) { appointmentsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay citas programadas.</p>`; return; }
-            const sorted = appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const table = document.createElement('table'); table.className = 'w-full text-left';
-            table.innerHTML = `<thead class="bg-gray-50 border-b"><tr><th class="p-4 font-semibold text-sm">Fecha y Hora</th><th class="p-4 font-semibold text-sm">Paciente</th><th class="p-4 font-semibold text-sm hidden sm:table-cell">Motivo</th><th class="p-4 font-semibold text-sm">Acciones</th></tr></thead>`;
-            const tbody = document.createElement('tbody');
-            sorted.forEach(apt => {
-                const patient = allPatients.find(p => p.id === apt.patientId);
-                const date = new Date(apt.date);
-                const formattedDate = isNaN(date) ? 'Fecha inválida' : date.toLocaleString('es-CL');
-                const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4 font-medium">${formattedDate}</td><td class="p-4">${patient ? patient.petName : 'N/A'}</td><td class="p-4 text-sm text-gray-600 hidden sm:table-cell">${apt.reason}</td><td class="p-4 flex items-center space-x-2"><button data-id="${apt.id}" class="edit-appointment-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${apt.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody); appointmentsList.appendChild(table);
-        };
+        const updateAppointmentPatientOptions = (patients) => {
+            const select = document.getElementById('appointment-patient');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Seleccione un paciente...</option>';
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = `${patient.petName} (${patient.ownerName})`;
+                select.appendChild(option);
+            });
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        };
+        
+        const renderAppointments = (appointments) => {
+            appointmentsList.innerHTML = '';
+             if (appointments.length === 0) { appointmentsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay citas programadas.</p>`; return; }
+            const sorted = appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const table = document.createElement('table'); table.className = 'w-full text-left';
+            table.innerHTML = `<thead class="bg-gray-50 border-b"><tr><th class="p-4 font-semibold text-sm">Fecha y Hora</th><th class="p-4 font-semibold text-sm">Paciente</th><th class="p-4 font-semibold text-sm hidden sm:table-cell">Motivo</th><th class="p-4 font-semibold text-sm">Acciones</th></tr></thead>`;
+            const tbody = document.createElement('tbody');
+            sorted.forEach(apt => {
+                const patient = allPatients.find(p => p.id === apt.patientId);
+                const date = new Date(apt.date);
+                const formattedDate = isNaN(date) ? 'Fecha inválida' : date.toLocaleString('es-CL');
+                const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `<td class="p-4 font-medium">${formattedDate}</td><td class="p-4">${patient ? patient.petName : 'N/A'}</td><td class="p-4 text-sm text-gray-600 hidden sm:table-cell">${apt.reason}</td><td class="p-4 flex items-center space-x-2"><button data-id="${apt.id}" class="edit-appointment-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${apt.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody); appointmentsList.appendChild(table);
+        };
 
-        const loadAppointments = () => {
-            onSnapshot(query(collection(db, 'appointments')), (snapshot) => {
-                allAppointments = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                renderAppointments(allAppointments);
-            });
-        };
-        
-        appointmentForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
-        appointmentsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
-        
-        // --- Lógica de Admin ---
-        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const passwordInput = document.getElementById('admin-password');
-            const errorMsg = document.getElementById('admin-error-msg');
-            if (passwordInput.value === ADMIN_PASS) {
-                isAdmin = true;
-                closeModal();
-                passwordInput.value = '';
-                errorMsg.classList.add('hidden');
-                document.querySelector('button[data-view="admin"]').click();
-            } else {
-                errorMsg.classList.remove('hidden');
-            }
-        });
+        const loadAppointments = () => {
+            onSnapshot(query(collection(db, 'appointments')), (snapshot) => {
+                allAppointments = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                renderAppointments(allAppointments);
+            });
+        };
+        
+        appointmentForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
+        appointmentsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
+        
+        // --- Lógica de Admin ---
+        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const passwordInput = document.getElementById('admin-password');
+            const errorMsg = document.getElementById('admin-error-msg');
+            if (passwordInput.value === ADMIN_PASS) {
+                isAdmin = true;
+                closeModal();
+                passwordInput.value = '';
+                errorMsg.classList.add('hidden');
+                document.querySelector('button[data-view="admin"]').click();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        });
 
-        // --- Lógica de Chat ---
-        document.getElementById('open-chat-btn').addEventListener('click', () => openModal('user-chat-modal'));
-        document.getElementById('user-chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('user-chat-name').value;
-            const message = document.getElementById('user-chat-message').value;
-            try {
-                await addDoc(collection(db, 'chatMessages'), {
-                    name,
-                    message,
-                    timestamp: serverTimestamp(),
-                    isRead: false
-                });
-                closeModal();
-                alert('¡Mensaje enviado con éxito!');
-                e.target.reset();
-            } catch (error) {
-                console.error("Error al enviar mensaje:", error);
-                alert("Hubo un error al enviar tu mensaje.");
-            }
-        });
-        
-        const loadChatMessages = () => {
-            const q = query(collection(db, 'chatMessages'));
-            onSnapshot(q, (snapshot) => {
-                const messages = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                renderAdminChat(messages);
-            });
-        };
-        const renderAdminChat = (messages) => {
-            const chatList = document.getElementById('admin-chat-list');
-            chatList.innerHTML = '';
-            if (messages.length === 0) {
-                chatList.innerHTML = `<p class="p-4 text-center text-gray-500 text-sm">No hay mensajes.</p>`;
-                return;
-            }
-            messages.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-            messages.forEach(msg => {
-                const date = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleString('es-CL') : 'Enviando...';
-                const div = document.createElement('div');
-                div.className = 'p-3 rounded-md border bg-white';
-                div.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-sm">${msg.name}</p>
-                            <p class="text-xs text-gray-500">${date}</p>
-                        </div>
-                        <button data-id="${msg.id}" class="delete-chat-btn p-1 text-red-400 hover:text-red-600">&times;</button>
-                    </div>
-                    <p class="mt-2 text-gray-800 text-sm">${msg.message}</p>
-                `;
-                chatList.appendChild(div);
-            });
-        };
-        document.getElementById('admin-chat-list').addEventListener('click', async e => {
-            if (e.target.classList.contains('delete-chat-btn')) {
-                const id = e.target.dataset.id;
-                if(confirm('¿Eliminar este mensaje?')) {
-                    await deleteDoc(doc(db, 'chatMessages', id));
-                }
-            }
-        });
-        
+        // --- Lógica de Chat ---
+        document.getElementById('open-chat-btn').addEventListener('click', () => openModal('user-chat-modal'));
+        document.getElementById('user-chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('user-chat-name').value;
+            const message = document.getElementById('user-chat-message').value;
+            try {
+                await addDoc(collection(db, 'chatMessages'), {
+                    name,
+                    message,
+                    timestamp: serverTimestamp(),
+                    isRead: false
+                });
+                closeModal();
+                alert('¡Mensaje enviado con éxito!');
+                e.target.reset();
+            } catch (error) {
+                console.error("Error al enviar mensaje:", error);
+                alert("Hubo un error al enviar tu mensaje.");
+            }
+        });
+        
+        const loadChatMessages = () => {
+            const q = query(collection(db, 'chatMessages'));
+            onSnapshot(q, (snapshot) => {
+                const messages = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                renderAdminChat(messages);
+            });
+        };
+        const renderAdminChat = (messages) => {
+            const chatList = document.getElementById('admin-chat-list');
+            chatList.innerHTML = '';
+            if (messages.length === 0) {
+                chatList.innerHTML = `<p class="p-4 text-center text-gray-500 text-sm">No hay mensajes.</p>`;
+                return;
+            }
+            messages.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            messages.forEach(msg => {
+                const date = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleString('es-CL') : 'Enviando...';
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-md border bg-white';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-sm">${msg.name}</p>
+                            <p class="text-xs text-gray-500">${date}</p>
+                        </div>
+                        <button data-id="${msg.id}" class="delete-chat-btn p-1 text-red-400 hover:text-red-600">&times;</button>
+                    </div>
+                    <p class="mt-2 text-gray-800 text-sm">${msg.message}</p>
+                `;
+                chatList.appendChild(div);
+            });
+        };
+        document.getElementById('admin-chat-list').addEventListener('click', async e => {
+            if (e.target.classList.contains('delete-chat-btn')) {
+                const id = e.target.dataset.id;
+                if(confirm('¿Eliminar este mensaje?')) {
+                    await deleteDoc(doc(db, 'chatMessages', id));
+                }
+            }
+        });
+
         // --- Lógica de Insumos ---
         const supplyForm = document.getElementById('supply-form');
-        const supplySubmitBtn = document.getElementById('supply-submit-btn');
+        const suppliesList = document.getElementById('supplies-list');
 
         supplyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const file = document.getElementById('supply-image').files[0];
-            if (!file) return;
+            const fileInput = document.getElementById('supply-image');
+            const nameInput = document.getElementById('supply-name');
+            const descriptionInput = document.getElementById('supply-description');
+            const priceInput = document.getElementById('supply-price');
+            
+            const file = fileInput.files[0];
+            const name = nameInput.value;
+            const description = descriptionInput.value;
+            const price = parseFloat(priceInput.value);
 
-            supplySubmitBtn.disabled = true;
-            document.getElementById('supply-submit-text').classList.add('hidden');
+            if (!file || !name || isNaN(price)) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            // Mostrar el spinner y deshabilitar el botón
+            document.getElementById('supply-submit-text').textContent = "Subiendo...";
             document.getElementById('supply-submit-spinner').classList.remove('hidden');
+            document.getElementById('supply-submit-btn').disabled = true;
 
             try {
-                const storagePath = `supplies/${Date.now()}_${file.name}`;
+                const storagePath = `supplies/${file.name}-${Date.now()}`;
                 const storageRef = ref(storage, storagePath);
+                
                 await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(storageRef);
 
                 await addDoc(collection(db, 'supplies'), {
                     url: downloadURL,
                     path: storagePath,
+                    name: name,
+                    description: description,
+                    price: price,
                     createdAt: serverTimestamp()
                 });
-                e.target.reset();
+
+                alert('Insumo subido con éxito.');
+                supplyForm.reset();
             } catch (error) {
                 console.error("Error al subir insumo:", error);
-                alert("Hubo un error al subir la imagen.");
+                alert("Hubo un error al subir la imagen. Por favor, inténtalo de nuevo.");
             } finally {
-                supplySubmitBtn.disabled = false;
-                document.getElementById('supply-submit-text').classList.remove('hidden');
+                document.getElementById('supply-submit-text').textContent = "Subir Insumo";
                 document.getElementById('supply-submit-spinner').classList.add('hidden');
+                document.getElementById('supply-submit-btn').disabled = false;
             }
         });
 
         const loadSupplies = () => {
             const q = query(collection(db, 'supplies'));
-            onSnapshot(q, (snapshot) => {
-                const supplies = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+            onSnapshot(q, (querySnapshot) => {
+                const supplies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderSupplies(supplies);
             });
         };
+
         const renderSupplies = (supplies) => {
-            const list = document.getElementById('supplies-list');
-            list.innerHTML = '';
-             if (supplies.length === 0) {
-                list.innerHTML = `<p class="p-4 text-center text-gray-500 text-sm col-span-full">No hay insumos subidos.</p>`;
+            suppliesList.innerHTML = '';
+            if (supplies.length === 0) {
+                suppliesList.innerHTML = `<p class="p-4 text-center text-gray-500">No hay insumos médicos. ¡Sube el primero!</p>`;
                 return;
             }
-            supplies.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            supplies.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
             supplies.forEach(supply => {
                 const div = document.createElement('div');
-                div.className = 'relative group';
+                div.className = 'relative group bg-white rounded-md shadow-md overflow-hidden';
                 div.innerHTML = `
-                    <img src="${supply.url}" class="w-full h-24 object-cover rounded-md shadow">
+                    <img src="${supply.url}" class="w-full h-24 object-cover">
+                    <div class="p-2">
+                        <p class="font-semibold text-sm truncate">${supply.name || 'Sin nombre'}</p>
+                        <p class="text-xs text-gray-600 truncate">${supply.description || 'Sin descripción'}</p>
+                        <p class="text-sm font-bold text-teal-600 mt-1">$${supply.price.toFixed(0)}</p>
+                    </div>
                     <button data-id="${supply.id}" data-path="${supply.path}" class="delete-supply-btn absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                 `;
-                list.appendChild(div);
+                suppliesList.appendChild(div);
             });
         };
+
         document.getElementById('supplies-list').addEventListener('click', async e => {
             const deleteBtn = e.target.closest('.delete-supply-btn');
             if (deleteBtn) {
@@ -583,15 +598,14 @@
                 }
             }
         });
-
-        // --- Carga Inicial de Datos ---
-        function loadAllData() {
-            loadPatients();
-            loadAppointments();
-            loadChatMessages();
+        // --- Carga Inicial de Datos ---
+        function loadAllData() {
+            loadPatients();
+            loadAppointments();
+            loadChatMessages();
             loadSupplies();
-        }
+        }
 
-    </script>
+    </script>
 </body>
 </html>
