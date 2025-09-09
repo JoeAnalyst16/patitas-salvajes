@@ -429,8 +429,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // FIX: Se añade getCountFromServer para resolver el error del dashboard.
-        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp, orderBy, limit, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // FIX: Se añade getDocs y getCountFromServer para resolver los errores.
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp, orderBy, limit, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
@@ -499,7 +499,7 @@
                 loadAllData();
             } else {
                 authStatus.innerHTML = `
-                    <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                    <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
                     <span class="text-red-600">Desconectado</span>
                 `;
                 signInAnonymously(auth).catch(error => {
@@ -1010,9 +1010,14 @@
                         <div class="flex justify-between items-center">
                             <p class="font-bold text-gray-800">${data.name}</p>
                             ${isAdmin ? `
+                            <div class="flex space-x-2">
+                                <button data-id="${doc.id}" class="answer-chat-btn text-gray-400 hover:text-green-500 transition-colors" title="Marcar como contestado">
+                                    <span class="material-icons text-sm ${data.status === 'answered' ? 'text-green-500' : ''}">done_all</span>
+                                </button>
                                 <button data-id="${doc.id}" class="delete-chat-btn text-red-500 hover:text-red-700 transition-colors" title="Eliminar mensaje">
                                     <span class="material-icons text-sm">delete</span>
                                 </button>
+                            </div>
                             ` : ''}
                         </div>
                         ${data.phone ? `<p class="text-xs text-gray-500 mt-1">Teléfono: ${data.phone}</p>` : ''}
@@ -1047,7 +1052,8 @@
                     name: name,
                     phone: phone, // Guardamos el número de teléfono
                     message: message,
-                    timestamp: serverTimestamp()
+                    timestamp: serverTimestamp(),
+                    status: 'new' // Nuevo campo para el estado del mensaje
                 });
                 showNotification('Mensaje enviado exitosamente. Un veterinario se pondrá en contacto pronto.');
                 closeModal();
@@ -1057,9 +1063,10 @@
             }
         });
 
-        // Delete chat message logic
+        // Handle chat actions (delete and mark as answered)
         adminChatList.addEventListener('click', async e => {
             const deleteBtn = e.target.closest('.delete-chat-btn');
+            const answerBtn = e.target.closest('.answer-chat-btn');
             if (deleteBtn && isAdmin) {
                 const id = deleteBtn.dataset.id;
                 if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
@@ -1071,6 +1078,15 @@
                         showNotification('Hubo un error al eliminar el mensaje.', 'error');
                     }
                 }
+            } else if (answerBtn && isAdmin) {
+                 const id = answerBtn.dataset.id;
+                 try {
+                     await setDoc(doc(db, 'chat', id), { status: 'answered' }, { merge: true });
+                     showNotification('Mensaje marcado como contestado.', 'success');
+                 } catch (error) {
+                     console.error("Error al marcar mensaje como contestado:", error);
+                     showNotification('Hubo un error al actualizar el mensaje.', 'error');
+                 }
             }
         });
 
@@ -1079,14 +1095,15 @@
             try {
                 const snapshot = await getDocs(query(collection(db, 'chat'), orderBy('timestamp', 'desc')));
                 let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "Nombre,Telefono,Mensaje,Fecha\n";
+                csvContent += "Nombre,Telefono,Mensaje,Fecha,Estado\n";
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const name = `"${data.name.replace(/"/g, '""')}"`;
                     const phone = `"${data.phone?.replace(/"/g, '""') || ''}"`;
                     const message = `"${data.message.replace(/"/g, '""')}"`;
                     const date = `"${formatDate(data.timestamp)}"`;
-                    csvContent += `${name},${phone},${message},${date}\n`;
+                    const status = `"${data.status || 'new'}"`;
+                    csvContent += `${name},${phone},${message},${date},${status}\n`;
                 });
 
                 const encodedUri = encodeURI(csvContent);
