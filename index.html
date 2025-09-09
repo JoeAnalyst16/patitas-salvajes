@@ -616,11 +616,15 @@
                 const supplySnapshot = await getCountFromServer(collection(db, 'supplies'));
                 supplyCountEl.textContent = supplySnapshot.data().count;
 
-                // Get upcoming appointments (within next 7 days, excluding accepted)
+                // FIX: Consulta para citas próximas
                 const now = new Date();
-                const sevenDaysFromNow = new Date();
-                sevenDaysFromNow.setDate(now.getDate() + 7);
-                const qAppointments = query(collection(db, 'appointments'), where('dateTime', '>=', now), where('dateTime', '<=', sevenDaysFromNow), where('status', '!=', 'accepted'), orderBy('dateTime'), limit(5));
+                const qAppointments = query(
+                    collection(db, 'appointments'), 
+                    where('dateTime', '>=', now),
+                    where('status', '!=', 'accepted'), 
+                    orderBy('dateTime'), 
+                    limit(5)
+                );
                 onSnapshot(qAppointments, (querySnapshot) => {
                     upcomingAppointmentsList.innerHTML = '';
                     if (querySnapshot.empty) {
@@ -672,7 +676,7 @@
                 });
 
             } catch (error) {
-                console.error("Error loading dashboard data:", error);
+                console.error("Error al cargar los datos del dashboard:", error);
                 showNotification('Error al cargar los datos del dashboard', 'error');
             }
         };
