@@ -325,7 +325,7 @@
         <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4 max-h-screen overflow-y-auto">
             <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
             <form id="appointment-form">
-                <div>
+                <input type="hidden" id="appointment-id"> <div>
                     <label for="appointment-patient" class="block text-sm font-medium text-gray-700 mb-1">
                         Paciente <span class="text-red-500">*</span>
                     </label>
@@ -429,7 +429,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // FIX: Se añade getDocs y getCountFromServer para resolver los errores.
         import { getFirestore, collection, onSnapshot, getDocs, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp, orderBy, limit, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
@@ -607,7 +606,7 @@
                 const patientSnapshot = await getCountFromServer(collection(db, 'patients'));
                 patientCountEl.textContent = patientSnapshot.data().count;
 
-                const pendingSnapshot = await getCountFromServer(query(collection(db, 'appointments'), where('status', '!=', 'accepted')));
+                const pendingSnapshot = await getCountFromServer(query(collection(db, 'appointments'), where('status', '==', 'pending')));
                 appointmentPendingCountEl.textContent = pendingSnapshot.data().count;
 
                 const acceptedSnapshot = await getCountFromServer(query(collection(db, 'appointments'), where('status', '==', 'accepted')));
@@ -616,12 +615,12 @@
                 const supplySnapshot = await getCountFromServer(collection(db, 'supplies'));
                 supplyCountEl.textContent = supplySnapshot.data().count;
 
-                // FIX: Consulta para citas próximas
+                // FIX: Consulta para citas próximas mejorada
                 const now = new Date();
                 const qAppointments = query(
                     collection(db, 'appointments'), 
                     where('dateTime', '>=', now),
-                    where('status', '!=', 'accepted'), 
+                    where('status', '==', 'pending'), // Buscamos solo citas pendientes
                     orderBy('dateTime'), 
                     limit(5)
                 );
@@ -647,6 +646,7 @@
                     }
                 }, (error) => {
                     console.error("Error loading upcoming appointments:", error);
+                    upcomingAppointmentsList.innerHTML = `<p class="text-red-500 text-center">Error al cargar citas.</p>`;
                 });
 
                 // Get recent patients
@@ -885,16 +885,16 @@
                         </span>
                     </div>
                     <div class="flex-shrink-0 flex space-x-2">
-                         ${appointment.status !== 'accepted' && isAdmin ? `
+                         ${isAdmin ? `
                             <button data-id="${appointment.id}" class="accept-appointment-btn p-2 text-green-500 hover:bg-green-100 rounded-full transition-colors" title="Aceptar cita">
                                 <span class="material-icons text-lg">done_all</span>
+                            </button>
+                            <button data-id="${appointment.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar cita">
+                                <span class="material-icons text-lg">delete</span>
                             </button>
                         ` : ''}
                         <button data-id="${appointment.id}" class="edit-appointment-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full transition-colors" title="Editar cita">
                              <span class="material-icons text-lg">edit</span>
-                        </button>
-                        <button data-id="${appointment.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar cita">
-                             <span class="material-icons text-lg">delete</span>
                         </button>
                     </div>
                 `;
@@ -916,7 +916,7 @@
         // Event Listeners para Citas
         document.getElementById('add-appointment-btn').addEventListener('click', () => {
             if (allPatients.length === 0) {
-                showNotification('Primero debes agregar un paciente.', 'info');
+                showNotification('¡Primero debes agregar un paciente!', 'error');
                 return;
             }
             document.getElementById('appointment-modal-title').textContent = 'Nueva Cita';
