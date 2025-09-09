@@ -1,611 +1,1158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patitas Salvajes - Clínica Veterinaria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .modal-backdrop {
-            background-color: rgba(0,0,0,0.5);
-            -webkit-backdrop-filter: blur(2px);
-            backdrop-filter: blur(2px);
-        }
-        .upload-spinner {
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patitas Salvajes - Clínica Veterinaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+        }
+        .upload-spinner {
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .notification {
+            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .loading-skeleton {
+            background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-        <header class="bg-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <img src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true" alt="Logo Patitas Salvajes" class="h-16 w-auto">
-                <h1 class="text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
-            </div>
-            <div id="auth-status" class="text-sm text-gray-500 font-semibold">
-                Conectando...
-            </div>
-        </div>
-    </header>
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-        <main class="container mx-auto p-4 md:p-6">
-        
-                <nav class="bg-white p-2 rounded-lg shadow-md mb-6">
-            <div class="flex justify-center space-x-1 md:space-x-4">
-                <button data-view="patients" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold bg-teal-500 text-white shadow-sm hover:bg-teal-600 transition-colors flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
-                    Pacientes
-                </button>
-                <button data-view="appointments" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
-                    Citas
-                </button>
-                <button data-view="admin" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-colors flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 8a6 6 0 11-12 0 6 6 0 0112 0zM7 8a3 3 0 116 0 3 3 0 01-6 0zM5.5 16a4.5 4.5 0 016.58-3.32.75.75 0 10-1.16-1.36A3 3 0 008.5 14.5a3 3 0 00-3.32 2.58.75.75 0 101.36.32A1.5 1.5 0 018.5 16a1.5 1.5 0 01-3-1.42V14.5a.75.75 0 00-1.5 0v.08A4.5 4.5 0 015.5 16z" clip-rule="evenodd" /></svg>
-                    Admin
-                </button>
-            </div>
-        </nav>
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true" 
+                     alt="Logo Patitas Salvajes" 
+                     class="h-16 w-auto"
+                     onerror="this.style.display='none'">
+                <h1 class="text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
+            </div>
+            <div id="auth-status" class="text-sm text-gray-500 font-semibold flex items-center space-x-2">
+                <div class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                <span>Conectando...</span>
+            </div>
+        </div>
+    </header>
 
-                <div id="views-container">
-                        <div id="patients-view" class="view-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
-                    <button id="add-patient-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-colors font-semibold">
-                        Nuevo Paciente
-                    </button>
-                </div>
-                <div id="patients-list" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <p class="p-8 text-center text-gray-500">Cargando pacientes...</p>
-                </div>
-            </div>
+    <main class="container mx-auto p-4 md:p-6">
+        
+        <nav class="bg-white p-2 rounded-lg shadow-md mb-6 flex justify-center flex-wrap gap-2">
+            <button data-view="dashboard" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition-all duration-200 flex items-center transform hover:scale-105">
+                <span class="material-icons text-lg mr-2">dashboard</span> Dashboard
+            </button>
+            <button data-view="patients" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
+                <span class="material-icons text-lg mr-2">group</span> Pacientes
+            </button>
+            <button data-view="appointments" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
+                 <span class="material-icons text-lg mr-2">event</span> Citas
+            </button>
+            <button data-view="admin" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
+                <span class="material-icons text-lg mr-2">admin_panel_settings</span> Admin
+            </button>
+        </nav>
 
-                        <div id="appointments-view" class="view-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Agenda de Citas</h2>
-                    <button id="add-appointment-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-colors font-semibold">
-                        Nueva Cita
-                    </button>
-                </div>
-                <div id="appointments-list" class="bg-white rounded-lg shadow-md overflow-hidden">
-                     <p class="p-8 text-center text-gray-500">Cargando citas...</p>
-                </div>
-            </div>
-
-                        <div id="admin-view" class="view-content hidden">
-                <h2 class="text-2xl font-bold text-gray-700 mb-4">Panel de Administración</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-3">Chat Veterinario</h3>
-                        <div id="admin-chat-list" class="h-96 overflow-y-auto space-y-3 p-2 border rounded-md bg-gray-50">
-                                                    </div>
-                    </div>
-                                        <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-3">Insumos Médicos</h3>
-                        <form id="supply-form" class="mb-4 p-3 border rounded-md">
-                            <label for="supply-name" class="block text-sm font-medium text-gray-700">Nombre del Insumo:</label>
-                            <input type="text" id="supply-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-
-                            <label for="supply-description" class="block text-sm font-medium text-gray-700 mt-4">Descripción:</label>
-                            <textarea id="supply-description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-
-                            <label for="supply-price" class="block text-sm font-medium text-gray-700 mt-4">Precio ($):</label>
-                            <input type="number" id="supply-price" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-
-                            <label for="supply-image" class="block text-sm font-medium text-gray-700 mt-4">Subir nueva imagen de insumo:</label>
-                            <input type="file" id="supply-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" required>
-                            <button type="submit" id="supply-submit-btn" class="mt-3 w-full px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-sm hover:bg-indigo-600 transition-colors font-semibold flex items-center justify-center">
-                                <span id="supply-submit-text">Subir Insumo</span>
-                                <div id="supply-submit-spinner" class="w-5 h-5 rounded-full border-2 border-white upload-spinner hidden ml-2"></div>
-                            </button>
-                        </form>
-                        <div id="supplies-list" class="grid grid-cols-2 md:grid-cols-3 gap-4 h-80 overflow-y-auto p-2 border rounded-md bg-gray-50">
-                                                    </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-        <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-    </button>
-    
-        <footer class="mt-8 py-8 bg-white border-t">
-      <div class="container mx-auto px-6 text-gray-500">
-        <div class="grid md:grid-cols-3 gap-6 text-sm text-center">
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Contáctanos</h4>
-                <a href="https://wa.me/56977638154" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2C5.582 2 2 5.582 2 10c0 1.58.44 3.06.945 4.383L2 20l5.617-.945A7.96 7.96 0 0010 18c4.418 0 8-3.582 8-8s-3.582-8-8-8zm4.02 9.22c-.18.42-.87.81-1.04.83-.17.02-1.03-.27-1.95-1.18-.92-.91-1.5-2.03-1.63-2.36-.13-.33 0-.5.14-.64.13-.14.28-.35.42-.48.14-.13.18-.23.27-.38.09-.15.05-.28-.02-.38-.07-.1-1.12-1.34-1.3-1.58-.18-.24-.36-.28-.5-.28-.14 0-.3.02-.43.02-.13 0-.33.05-.5.23-.17.18-.68.65-.68 1.58 0 .93.7 1.83.8 1.95.1.12 1.35 2.12 3.28 2.88 1.93.76 1.93.5 2.27.48.34-.02 1.03-.42 1.18-.83.15-.4.15-.75.1-.83-.05-.07-.18-.12-.35-.2z"/></svg>
-                    <span>+56 9 7763 8154</span>
-                </a>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Encuéntranos</h4>
-                <p>Av. Manuel Rodriguez 1886, Concepción</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-800 mb-2 text-base">Síguenos</h4>
-                <a href="https://instagram.com/farmaciapatitassalvajes" target="_blank" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
-                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.99 5.99a.75.75 0 011.06 0L10 8.94l2.95-2.95a.75.75 0 111.06 1.06L11.06 10l2.95 2.95a.75.75 0 11-1.06 1.06L10 11.06l-2.95 2.95a.75.75 0 01-1.06-1.06L8.94 10 5.99 7.05a.75.75 0 010-1.06z" clip-rule="evenodd" /></svg>
-                    <span>@farmaciapatitassalvajes</span>
-                </a>
-            </div>
-        </div>
-        <p class="mt-8 pt-6 border-t border-gray-200 text-center">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
-      </div>
-    </footer>
-
-
-            <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
-            <form id="patient-form">
-                <input type="hidden" id="patient-id">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="pet-name" class="block text-sm font-medium text-gray-700">Nombre Mascota</label>
-                        <input type="text" id="pet-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                    <div>
-                        <label for="owner-name" class="block text-sm font-medium text-gray-700">Nombre Dueño</label>
-                        <input type="text" id="owner-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                     <div>
-                        <label for="pet-species" class="block text-sm font-medium text-gray-700">Especie</label>
-                        <input type="text" id="pet-species" placeholder="Ej: Perro, Gato" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
-                    </div>
-                     <div>
-                        <label for="pet-breed" class="block text-sm font-medium text-gray-700">Raza</label>
-                        <input type="text" id="pet-breed" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label for="contact-phone" class="block text-sm font-medium text-gray-700">Teléfono Contacto</label>
-                    <input type="tel" id="contact-phone" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500">
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-        <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
-            <form id="appointment-form">
-                <input type="hidden" id="appointment-id">
-                <div>
-                    <label for="appointment-patient" class="block text-sm font-medium text-gray-700">Paciente</label>
-                    <select id="appointment-patient" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                        <option value="">Seleccione un paciente...</option>
-                    </select>
-                </div>
-                <div class="mt-4">
-                    <label for="appointment-date" class="block text-sm font-medium text-gray-700">Fecha y Hora</label>
-                    <input type="datetime-local" id="appointment-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                </div>
-                <div class="mt-4">
-                    <label for="appointment-reason" class="block text-sm font-medium text-gray-700">Motivo de la Cita</label>
-                    <textarea id="appointment-reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-        <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm m-4">
-            <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
-            <form id="admin-login-form">
-                <div>
-                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                    <input type="password" id="admin-password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
-                    <p id="admin-error-msg" class="text-red-500 text-sm mt-1 hidden">Contraseña incorrecta.</p>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Ingresar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-        <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
-            <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
-            <form id="user-chat-form">
-                <div>
-                    <label for="user-chat-name" class="block text-sm font-medium text-gray-700">Tu Nombre</label>
-                    <input type="text" id="user-chat-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                </div>
-                <div class="mt-4">
-                    <label for="user-chat-message" class="block text-sm font-medium text-gray-700">Tu Mensaje</label>
-                    <textarea id="user-chat-message" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" required></textarea>
-                </div>
-                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Enviar Mensaje</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-        <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBQdlG6bEGYIoR_WGzBVCB5V5UHvwC4N3A",
-            authDomain: "patitas-salvajes.firebaseapp.com",
-            projectId: "patitas-salvajes",
-            storageBucket: "patitas-salvajes.appspot.com",
-            messagingSenderId: "862527621880",
-            appId: "1:862527621880:web:17a26cd5f26e4b1909490d",
-            measurementId: "G-44TYF6VMME"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const storage = getStorage(app);
-
-        let isAdmin = false;
-        const ADMIN_PASS = "Patitassalvajes1996*";
-
-        // --- Autenticación ---
-        onAuthStateChanged(auth, user => {
-            const authStatus = document.getElementById('auth-status');
-            if (user) {
-                authStatus.textContent = `Conectado`;
-                authStatus.classList.add('text-green-600');
-                loadAllData();
-            } else {
-                authStatus.textContent = `Desconectado`;
-                authStatus.classList.remove('text-green-600');
-                signInAnonymously(auth).catch(error => {
-                    console.error("Error en la autenticación anónima:", error);
-                    authStatus.textContent = `Error de conexión`;
-                });
-            }
-        });
-
-        // --- Elementos del DOM ---
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const views = document.querySelectorAll('.view-content');
-        const allModals = document.querySelectorAll('.fixed.inset-0');
-        
-        // --- Navegación ---
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const viewName = button.dataset.view;
-
-                if (viewName === 'admin' && !isAdmin) {
-                    openModal('admin-login-modal');
-                    return;
-                }
-
-                navButtons.forEach(btn => {
-                    btn.classList.remove('bg-teal-500', 'text-white');
-                    btn.classList.add('text-gray-700', 'hover:bg-gray-200');
-                });
-                button.classList.add('bg-teal-500', 'text-white');
-                button.classList.remove('text-gray-700', 'hover:bg-gray-200');
-
-                views.forEach(view => {
-                    if (view.id === `${viewName}-view`) {
-                        view.classList.remove('hidden');
-                    } else {
-                        view.classList.add('hidden');
-                    }
-                });
-            });
-        });
-
-        // --- Lógica de Modales ---
-        const openModal = (modalId) => document.getElementById(modalId)?.classList.replace('hidden', 'flex');
-        const closeModal = () => allModals.forEach(m => m.classList.replace('flex', 'hidden'));
-        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
-
-        // --- Lógica de Pacientes ---
-        const patientForm = document.getElementById('patient-form');
-        const patientsList = document.getElementById('patients-list');
-        let allPatients = [];
-        
-        const renderPatients = (patients) => {
-            patientsList.innerHTML = '';
-            if (patients.length === 0) {
-                patientsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay pacientes registrados. ¡Añade el primero!</p>`;
-                return;
-            }
-            const table = document.createElement('table');
-            table.className = 'w-full text-left';
-            table.innerHTML = `
-                <thead class="bg-gray-50 border-b">
-                    <tr>
-                        <th class="p-4 font-semibold text-sm">Mascota</th>
-                        <th class="p-4 font-semibold text-sm hidden md:table-cell">Dueño</th>
-                        <th class="p-4 font-semibold text-sm hidden sm:table-cell">Especie/Raza</th>
-                        <th class="p-4 font-semibold text-sm">Acciones</th>
-                    </tr>
-                </thead>
-            `;
-            const tbody = document.createElement('tbody');
-            patients.forEach(patient => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4 font-medium">${patient.petName}</td><td class="p-4 hidden md:table-cell">${patient.ownerName}</td><td class="p-4 hidden sm:table-cell text-sm text-gray-600">${patient.species} / ${patient.breed || 'N/A'}</td><td class="p-4 flex items-center space-x-2"><button data-id="${patient.id}" class="edit-patient-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${patient.id}" class="delete-patient-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-            patientsList.appendChild(table);
-        };
-        
-        const loadPatients = () => {
-            const q = query(collection(db, 'patients'));
-            onSnapshot(q, (querySnapshot) => {
-                allPatients = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPatients(allPatients);
-                updateAppointmentPatientOptions(allPatients);
-            });
-        };
-        
-        patientForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
-        patientsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
-
-
-        // --- Lógica de Citas ---
-        const appointmentForm = document.getElementById('appointment-form');
-        const appointmentsList = document.getElementById('appointments-list');
-        let allAppointments = [];
-
-        const updateAppointmentPatientOptions = (patients) => {
-            const select = document.getElementById('appointment-patient');
-            const currentValue = select.value;
-            select.innerHTML = '<option value="">Seleccione un paciente...</option>';
-            patients.forEach(patient => {
-                const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = `${patient.petName} (${patient.ownerName})`;
-                select.appendChild(option);
-            });
-            if (currentValue) {
-                select.value = currentValue;
-            }
-        };
-        
-        const renderAppointments = (appointments) => {
-            appointmentsList.innerHTML = '';
-             if (appointments.length === 0) { appointmentsList.innerHTML = `<p class="p-8 text-center text-gray-500">No hay citas programadas.</p>`; return; }
-            const sorted = appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const table = document.createElement('table'); table.className = 'w-full text-left';
-            table.innerHTML = `<thead class="bg-gray-50 border-b"><tr><th class="p-4 font-semibold text-sm">Fecha y Hora</th><th class="p-4 font-semibold text-sm">Paciente</th><th class="p-4 font-semibold text-sm hidden sm:table-cell">Motivo</th><th class="p-4 font-semibold text-sm">Acciones</th></tr></thead>`;
-            const tbody = document.createElement('tbody');
-            sorted.forEach(apt => {
-                const patient = allPatients.find(p => p.id === apt.patientId);
-                const date = new Date(apt.date);
-                const formattedDate = isNaN(date) ? 'Fecha inválida' : date.toLocaleString('es-CL');
-                const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4 font-medium">${formattedDate}</td><td class="p-4">${patient ? patient.petName : 'N/A'}</td><td class="p-4 text-sm text-gray-600 hidden sm:table-cell">${apt.reason}</td><td class="p-4 flex items-center space-x-2"><button data-id="${apt.id}" class="edit-appointment-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-id="${apt.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></td>`;
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody); appointmentsList.appendChild(table);
-        };
-
-        const loadAppointments = () => {
-            onSnapshot(query(collection(db, 'appointments')), (snapshot) => {
-                allAppointments = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                renderAppointments(allAppointments);
-            });
-        };
-        
-        appointmentForm.addEventListener('submit', async (e) => { /* ... existing code ... */ });
-        appointmentsList.addEventListener('click', async (e) => { /* ... existing code ... */ });
-        
-        // --- Lógica de Admin ---
-        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const passwordInput = document.getElementById('admin-password');
-            const errorMsg = document.getElementById('admin-error-msg');
-            if (passwordInput.value === ADMIN_PASS) {
-                isAdmin = true;
-                closeModal();
-                passwordInput.value = '';
-                errorMsg.classList.add('hidden');
-                document.querySelector('button[data-view="admin"]').click();
-            } else {
-                errorMsg.classList.remove('hidden');
-            }
-        });
-
-        // --- Lógica de Chat ---
-        document.getElementById('open-chat-btn').addEventListener('click', () => openModal('user-chat-modal'));
-        document.getElementById('user-chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('user-chat-name').value;
-            const message = document.getElementById('user-chat-message').value;
-            try {
-                await addDoc(collection(db, 'chatMessages'), {
-                    name,
-                    message,
-                    timestamp: serverTimestamp(),
-                    isRead: false
-                });
-                closeModal();
-                alert('¡Mensaje enviado con éxito!');
-                e.target.reset();
-            } catch (error) {
-                console.error("Error al enviar mensaje:", error);
-                alert("Hubo un error al enviar tu mensaje.");
-            }
-        });
-        
-        const loadChatMessages = () => {
-            const q = query(collection(db, 'chatMessages'));
-            onSnapshot(q, (snapshot) => {
-                const messages = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                renderAdminChat(messages);
-            });
-        };
-        const renderAdminChat = (messages) => {
-            const chatList = document.getElementById('admin-chat-list');
-            chatList.innerHTML = '';
-            if (messages.length === 0) {
-                chatList.innerHTML = `<p class="p-4 text-center text-gray-500 text-sm">No hay mensajes.</p>`;
-                return;
-            }
-            messages.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-            messages.forEach(msg => {
-                const date = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleString('es-CL') : 'Enviando...';
-                const div = document.createElement('div');
-                div.className = 'p-3 rounded-md border bg-white';
-                div.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-sm">${msg.name}</p>
-                            <p class="text-xs text-gray-500">${date}</p>
-                        </div>
-                        <button data-id="${msg.id}" class="delete-chat-btn p-1 text-red-400 hover:text-red-600">&times;</button>
-                    </div>
-                    <p class="mt-2 text-gray-800 text-sm">${msg.message}</p>
-                `;
-                chatList.appendChild(div);
-            });
-        };
-        document.getElementById('admin-chat-list').addEventListener('click', async e => {
-            if (e.target.classList.contains('delete-chat-btn')) {
-                const id = e.target.dataset.id;
-                if(confirm('¿Eliminar este mensaje?')) {
-                    await deleteDoc(doc(db, 'chatMessages', id));
-                }
-            }
-        });
-
-        // --- Lógica de Insumos ---
-        const supplyForm = document.getElementById('supply-form');
-        const suppliesList = document.getElementById('supplies-list');
-
-        supplyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('supply-image');
-            const nameInput = document.getElementById('supply-name');
-            const descriptionInput = document.getElementById('supply-description');
-            const priceInput = document.getElementById('supply-price');
-            
-            const file = fileInput.files[0];
-            const name = nameInput.value;
-            const description = descriptionInput.value;
-            const price = parseFloat(priceInput.value);
-
-            if (!file || !name || isNaN(price)) {
-                alert("Por favor, completa todos los campos.");
-                return;
-            }
-
-            // Mostrar el spinner y deshabilitar el botón
-            document.getElementById('supply-submit-text').textContent = "Subiendo...";
-            document.getElementById('supply-submit-spinner').classList.remove('hidden');
-            document.getElementById('supply-submit-btn').disabled = true;
-
-            try {
-                const storagePath = `supplies/${file.name}-${Date.now()}`;
-                const storageRef = ref(storage, storagePath);
+        <div id="views-container">
+            <div id="dashboard-view" class="view-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Bienvenido a Patitas Salvajes 🐾</h2>
                 
-                await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(storageRef);
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase">Total Pacientes</p>
+                            <h3 id="patient-count" class="text-4xl font-extrabold text-blue-600 mt-1">...</h3>
+                        </div>
+                        <span class="material-icons text-5xl text-blue-300">pets</span>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase">Citas Pendientes</p>
+                            <h3 id="appointment-count" class="text-4xl font-extrabold text-green-600 mt-1">...</h3>
+                        </div>
+                        <span class="material-icons text-5xl text-green-300">schedule</span>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase">Insumos Médicos</p>
+                            <h3 id="supply-count" class="text-4xl font-extrabold text-purple-600 mt-1">...</h3>
+                        </div>
+                        <span class="material-icons text-5xl text-purple-300">medical_services</span>
+                    </div>
+                </div>
 
-                await addDoc(collection(db, 'supplies'), {
-                    url: downloadURL,
-                    path: storagePath,
-                    name: name,
-                    description: description,
-                    price: price,
-                    createdAt: serverTimestamp()
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Citas Próximas</h3>
+                        <div id="upcoming-appointments-list" class="space-y-4">
+                            <div class="loading-skeleton h-20 w-full rounded-lg"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Pacientes Recientes</h3>
+                        <div id="recent-patients-list" class="space-y-4">
+                            <div class="loading-skeleton h-20 w-full rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="patients-view" class="view-content hidden">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+                    <h2 class="text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative">
+                            <input type="text" id="patient-search" placeholder="Buscar pacientes..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm">
+                            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">search</span>
+                        </div>
+                        <button id="add-patient-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-all duration-200 font-semibold flex items-center justify-center transform hover:scale-105">
+                            <span class="material-icons text-lg mr-2">add</span> Nuevo Paciente
+                        </button>
+                    </div>
+                </div>
+                <div id="patients-list" class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="loading-skeleton h-20 w-full"></div>
+                </div>
+            </div>
+
+            <div id="appointments-view" class="view-content hidden">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+                    <h2 class="text-2xl font-bold text-gray-700">Agenda de Citas</h2>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative">
+                            <input type="date" id="appointment-filter-date" 
+                                   class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+                        </div>
+                        <button id="add-appointment-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-all duration-200 font-semibold flex items-center justify-center transform hover:scale-105">
+                            <span class="material-icons text-lg mr-2">add</span> Nueva Cita
+                        </button>
+                    </div>
+                </div>
+                <div id="appointments-list" class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="loading-skeleton h-20 w-full"></div>
+                </div>
+            </div>
+
+            <div id="admin-view" class="view-content hidden">
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Panel de Administración</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-bold">Chat Veterinario</h3>
+                            <div id="unread-messages-badge" class="hidden bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                0 nuevos
+                            </div>
+                        </div>
+                        <div id="admin-chat-list" class="h-96 overflow-y-auto space-y-3 p-2 border rounded-md bg-gray-50">
+                            <div class="loading-skeleton h-16 w-full rounded"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                        <h3 class="text-lg font-bold mb-3">Gestión de Insumos Médicos</h3>
+                        <form id="supply-form" class="mb-6 p-4 border border-gray-200 rounded-xl bg-gray-50">
+                            <h4 class="font-semibold mb-3">Subir Nuevo Insumo</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="supply-name" class="block text-sm font-medium text-gray-700">Nombre del Insumo <span class="text-red-500">*</span></label>
+                                    <input type="text" id="supply-name" placeholder="Ej: Vacuna Triple Felina" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                                </div>
+                                <div>
+                                    <label for="supply-description" class="block text-sm font-medium text-gray-700">Descripción <span class="text-red-500">*</span></label>
+                                    <textarea id="supply-description" rows="3" placeholder="Descripción detallada del producto..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="supply-price" class="block text-sm font-medium text-gray-700">Precio ($)</label>
+                                        <input type="number" id="supply-price" placeholder="15000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                                    </div>
+                                    <div>
+                                        <label for="supply-image" class="block text-sm font-medium text-gray-700">Imagen <span class="text-red-500">*</span></label>
+                                        <input type="file" id="supply-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" id="supply-submit-btn" 
+                                    class="mt-4 w-full px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-sm hover:bg-indigo-600 transition-all duration-200 font-semibold flex items-center justify-center transform hover:scale-105">
+                                <span id="supply-submit-text">Subir Insumo</span>
+                                <div id="supply-submit-spinner" class="w-5 h-5 rounded-full border-2 border-white upload-spinner hidden ml-2"></div>
+                            </button>
+                        </form>
+                        <h4 class="font-semibold text-gray-700 mb-3">Lista de Insumos</h4>
+                        <div id="supplies-list" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-80 overflow-y-auto p-2 rounded-lg border border-gray-200">
+                            <div class="loading-skeleton h-32 w-full rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 transform hover:scale-110">
+        <span class="material-icons">chat</span>
+    </button>
+    
+    <footer class="mt-8 py-8 bg-white border-t">
+      <div class="container mx-auto px-6 text-gray-500">
+        <div class="grid md:grid-cols-3 gap-6 text-sm text-center">
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Contáctanos</h4>
+                <a href="https://wa.me/56977638154" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2C5.582 2 2 5.582 2 10c0 1.58.44 3.06.945 4.383L2 20l5.617-.945A7.96 7.96 0 0010 18c4.418 0 8-3.582 8-8s-3.582-8-8-8zm4.02 9.22c-.18.42-.87.81-1.04.83-.17.02-1.03-.27-1.95-1.18-.92-.91-1.5-2.03-1.63-2.36-.13-.33 0-.5.14-.64.13-.14.28-.35.42-.48.14-.13.18-.23.27-.38.09-.15.05-.28-.02-.38-.07-.1-1.12-1.34-1.3-1.58-.18-.24-.36-.28-.5-.28-.14 0-.3.02-.43.02-.13 0-.33.05-.5.23-.17.18-.68.65-.68 1.58 0 .93.7 1.83.8 1.95.1.12 1.35 2.12 3.28 2.88 1.93.76 1.93.5 2.27.48.34-.02 1.03-.42 1.18-.83.15-.4.15-.75.1-.83-.05-.07-.18-.12-.35-.2z"/></svg>
+                    <span>+56 9 7763 8154</span>
+                </a>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Encuéntranos</h4>
+                <p>Av. Manuel Rodriguez 1886, Concepción</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-800 mb-2 text-base">Síguenos</h4>
+                <a href="https://instagram.com/farmaciapatitassalvajes" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center space-x-2 hover:text-teal-600 transition-colors">
+                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.99 5.99a.75.75 0 011.06 0L10 8.94l2.95-2.95a.75.75 0 111.06 1.06L11.06 10l2.95 2.95a.75.75 0 11-1.06 1.06L10 11.06l-2.95 2.95a.75.75 0 01-1.06-1.06L8.94 10 5.99 7.05a.75.75 0 010-1.06z" clip-rule="evenodd" /></svg>
+                    <span>@farmaciapatitassalvajes</span>
+                </a>
+            </div>
+        </div>
+        <p class="mt-8 pt-6 border-t border-gray-200 text-center">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+
+    <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4 max-h-screen overflow-y-auto">
+            <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
+            <form id="patient-form">
+                <input type="hidden" id="patient-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="pet-name" class="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre Mascota <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="pet-name" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors" 
+                               required>
+                    </div>
+                    <div>
+                        <label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre Dueño <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="owner-name" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors" 
+                               required>
+                    </div>
+                     <div>
+                        <label for="pet-species" class="block text-sm font-medium text-gray-700 mb-1">
+                            Especie <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="pet-species" placeholder="Ej: Perro, Gato" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors" 
+                               required>
+                    </div>
+                     <div>
+                        <label for="pet-breed" class="block text-sm font-medium text-gray-700 mb-1">Raza</label>
+                        <input type="text" id="pet-breed" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Contacto</label>
+                    <input type="tel" id="contact-phone" placeholder="+56 9 XXXX XXXX" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                </div>
+                 <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4 max-h-screen overflow-y-auto">
+            <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
+            <form id="appointment-form">
+                <input type="hidden" id="appointment-id">
+                <div>
+                    <label for="appointment-patient" class="block text-sm font-medium text-gray-700 mb-1">
+                        Paciente <span class="text-red-500">*</span>
+                    </label>
+                    <select id="appointment-patient" 
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors" 
+                            required>
+                        <option value="">Seleccione un paciente...</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <label for="appointment-date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha y Hora <span class="text-red-500">*</span>
+                    </label>
+                    <input type="datetime-local" id="appointment-date" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors" 
+                           required>
+                </div>
+                <div class="mt-4">
+                    <label for="appointment-reason" class="block text-sm font-medium text-gray-700 mb-1">
+                        Motivo de la Cita <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="appointment-reason" rows="3" placeholder="Describa el motivo de la consulta..." 
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors" 
+                              required></textarea>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm m-4">
+            <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
+            <form id="admin-login-form">
+                <div>
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Contraseña <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="admin-password" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                           required>
+                    <p id="admin-error-msg" class="text-red-500 text-sm mt-1 hidden">Contraseña incorrecta.</p>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
+                        Ingresar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
+            <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
+            <form id="user-chat-form">
+                <div>
+                    <label for="user-chat-name" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tu Nombre <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="user-chat-name" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors" 
+                           required>
+                </div>
+                <div class="mt-4">
+                    <label for="user-chat-message" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tu Mensaje <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="user-chat-message" rows="4" placeholder="Escribe tu mensaje aquí..." 
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors" 
+                              required></textarea>
+                </div>
+                 <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        Enviar Mensaje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, serverTimestamp, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        
+        // Configuración de Firebase - Reemplaza con tus credenciales
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQdlG6bEGYIoR_WGzBVCB5V5UHvwC4N3A",
+            authDomain: "patitas-salvajes.firebaseapp.com",
+            projectId: "patitas-salvajes",
+            storageBucket: "patitas-salvajes.appspot.com",
+            messagingSenderId: "862527621880",
+            appId: "1:862527621880:web:17a26cd5f26e4b1909490d",
+            measurementId: "G-44TYF6VMME"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+
+        let isAdmin = false;
+        const ADMIN_PASS = "Patitassalvajes1996*";
+
+        // --- Utility Functions ---
+        const showNotification = (message, type = 'success') => {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification px-4 py-3 rounded-lg shadow-lg text-white font-medium ${
+                type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        };
+
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+
+        const formatDate = (date) => {
+            const d = date.toDate();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return d.toLocaleDateString('es-CL', options);
+        };
+
+        // --- Autenticación ---
+        onAuthStateChanged(auth, user => {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                authStatus.innerHTML = `
+                    <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span class="text-green-600">Conectado</span>
+                `;
+                loadAllData();
+            } else {
+                authStatus.innerHTML = `
+                    <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                    <span class="text-red-600">Desconectado</span>
+                `;
+                signInAnonymously(auth).catch(error => {
+                    console.error("Error en la autenticación anónima:", error);
+                    authStatus.innerHTML = `
+                        <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                        <span class="text-red-600">Error de conexión</span>
+                    `;
                 });
-
-                alert('Insumo subido con éxito.');
-                supplyForm.reset();
-            } catch (error) {
-                console.error("Error al subir insumo:", error);
-                alert("Hubo un error al subir la imagen. Por favor, inténtalo de nuevo.");
-            } finally {
-                document.getElementById('supply-submit-text').textContent = "Subir Insumo";
-                document.getElementById('supply-submit-spinner').classList.add('hidden');
-                document.getElementById('supply-submit-btn').disabled = false;
             }
         });
 
-        const loadSupplies = () => {
-            const q = query(collection(db, 'supplies'));
+        // --- Elementos del DOM ---
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const views = document.querySelectorAll('.view-content');
+        const allModals = document.querySelectorAll('.fixed.inset-0');
+        
+        // --- Navegación ---
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const viewName = button.dataset.view;
+
+                if (viewName === 'admin' && !isAdmin) {
+                    openModal('admin-login-modal');
+                    return;
+                }
+
+                navButtons.forEach(btn => {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'bg-teal-500', 'bg-green-500', 'hover:bg-blue-700', 'hover:bg-teal-600', 'hover:bg-green-600');
+                    btn.classList.add('text-gray-700', 'hover:bg-gray-200');
+                });
+                if (viewName === 'patients') {
+                    button.classList.add('bg-teal-500', 'text-white', 'hover:bg-teal-600');
+                } else if (viewName === 'appointments') {
+                    button.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
+                } else if (viewName === 'admin') {
+                    button.classList.add('bg-indigo-500', 'text-white', 'hover:bg-indigo-600');
+                } else {
+                    button.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
+                }
+
+                views.forEach(view => {
+                    if (view.id === `${viewName}-view`) {
+                        view.classList.remove('hidden');
+                    } else {
+                        view.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // --- Lógica de Modales ---
+        const openModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.replace('hidden', 'flex');
+                // Focus en el primer input
+                const firstInput = modal.querySelector('input[type="text"], input[type="password"], textarea, select');
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 100);
+                }
+            }
+        };
+        
+        const closeModal = () => {
+            allModals.forEach(m => {
+                m.classList.replace('flex', 'hidden');
+                // Limpiar formularios al cerrar
+                const forms = m.querySelectorAll('form');
+                forms.forEach(form => {
+                    form.reset();
+                    form.querySelectorAll('.text-red-500').forEach(error => error.classList.add('hidden'));
+                });
+            });
+        };
+        
+        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+
+        // Cerrar modal al hacer clic fuera
+        allModals.forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        });
+
+        // --- Lógica de Dashboard ---
+        const loadDashboardData = async () => {
+            const patientCountEl = document.getElementById('patient-count');
+            const appointmentCountEl = document.getElementById('appointment-count');
+            const supplyCountEl = document.getElementById('supply-count');
+            const upcomingAppointmentsList = document.getElementById('upcoming-appointments-list');
+            const recentPatientsList = document.getElementById('recent-patients-list');
+
+            // Reset dashboard content
+            patientCountEl.textContent = '...';
+            appointmentCountEl.textContent = '...';
+            supplyCountEl.textContent = '...';
+            upcomingAppointmentsList.innerHTML = `<div class="loading-skeleton h-20 w-full rounded-lg"></div>`;
+            recentPatientsList.innerHTML = `<div class="loading-skeleton h-20 w-full rounded-lg"></div>`;
+
+            try {
+                // Get counts
+                const patientSnapshot = await getCountFromServer(collection(db, 'patients'));
+                patientCountEl.textContent = patientSnapshot.data().count;
+
+                const appointmentSnapshot = await getCountFromServer(collection(db, 'appointments'));
+                appointmentCountEl.textContent = appointmentSnapshot.data().count;
+
+                const supplySnapshot = await getCountFromServer(collection(db, 'supplies'));
+                supplyCountEl.textContent = supplySnapshot.data().count;
+
+                // Get upcoming appointments (within next 7 days)
+                const now = new Date();
+                const sevenDaysFromNow = new Date();
+                sevenDaysFromNow.setDate(now.getDate() + 7);
+                const qAppointments = query(collection(db, 'appointments'), where('dateTime', '>=', now), where('dateTime', '<=', sevenDaysFromNow), orderBy('dateTime'), limit(5));
+                onSnapshot(qAppointments, (querySnapshot) => {
+                    upcomingAppointmentsList.innerHTML = '';
+                    if (querySnapshot.empty) {
+                        upcomingAppointmentsList.innerHTML = `<p class="text-gray-500 text-center">No hay citas próximas.</p>`;
+                    } else {
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const div = document.createElement('div');
+                            div.className = 'bg-gray-50 p-3 rounded-lg flex items-start space-x-3 border border-gray-100';
+                            div.innerHTML = `
+                                <span class="material-icons text-green-500 text-xl flex-shrink-0 mt-1">event</span>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${data.patientName}</p>
+                                    <p class="text-sm text-gray-600">${formatDate(data.dateTime)}</p>
+                                    <p class="text-xs text-gray-500">${data.reason}</p>
+                                </div>
+                            `;
+                            upcomingAppointmentsList.appendChild(div);
+                        });
+                    }
+                }, (error) => {
+                    console.error("Error loading upcoming appointments:", error);
+                });
+
+                // Get recent patients
+                const qPatients = query(collection(db, 'patients'), orderBy('createdAt', 'desc'), limit(5));
+                onSnapshot(qPatients, (querySnapshot) => {
+                    recentPatientsList.innerHTML = '';
+                    if (querySnapshot.empty) {
+                        recentPatientsList.innerHTML = `<p class="text-gray-500 text-center">No hay pacientes recientes.</p>`;
+                    } else {
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const div = document.createElement('div');
+                            div.className = 'bg-gray-50 p-3 rounded-lg flex items-center space-x-3 border border-gray-100';
+                            div.innerHTML = `
+                                <span class="material-icons text-blue-500 text-xl flex-shrink-0">person</span>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${data.petName}</p>
+                                    <p class="text-sm text-gray-600">Dueño: ${data.ownerName}</p>
+                                    <p class="text-xs text-gray-500">Especie: ${data.species}</p>
+                                </div>
+                            `;
+                            recentPatientsList.appendChild(div);
+                        });
+                    }
+                }, (error) => {
+                    console.error("Error loading recent patients:", error);
+                });
+
+            } catch (error) {
+                console.error("Error loading dashboard data:", error);
+                showNotification('Error al cargar los datos del dashboard', 'error');
+            }
+        };
+
+        // --- Lógica de Pacientes ---
+        const patientForm = document.getElementById('patient-form');
+        const patientsList = document.getElementById('patients-list');
+        const patientSearch = document.getElementById('patient-search');
+        let allPatients = [];
+        let filteredPatients = [];
+        
+        const filterPatients = debounce((searchTerm) => {
+            const term = searchTerm.toLowerCase().trim();
+            if (!term) {
+                filteredPatients = [...allPatients];
+            } else {
+                filteredPatients = allPatients.filter(patient => 
+                    patient.petName.toLowerCase().includes(term) ||
+                    patient.ownerName.toLowerCase().includes(term) ||
+                    patient.species.toLowerCase().includes(term) ||
+                    (patient.breed && patient.breed.toLowerCase().includes(term))
+                );
+            }
+            renderPatients(filteredPatients);
+        }, 300);
+        patientSearch.addEventListener('input', (e) => {
+            filterPatients(e.target.value);
+        });
+
+        const renderPatients = (patients) => {
+            patientsList.innerHTML = '';
+            if (patients.length === 0) {
+                const isEmpty = allPatients.length === 0;
+                patientsList.innerHTML = `
+                    <p class="p-8 text-center text-gray-500">
+                        ${isEmpty ? 'No hay pacientes registrados. ¡Añade el primero!' : 'No se encontraron pacientes con ese criterio de búsqueda.'}
+                    </p>
+                `;
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'min-w-full text-left';
+            table.innerHTML = `
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="p-4 font-semibold text-sm text-gray-700">Mascota</th>
+                        <th class="p-4 font-semibold text-sm text-gray-700 hidden md:table-cell">Dueño</th>
+                        <th class="p-4 font-semibold text-sm text-gray-700 hidden sm:table-cell">Especie/Raza</th>
+                        <th class="p-4 font-semibold text-sm text-gray-700 hidden lg:table-cell">Contacto</th>
+                        <th class="p-4 font-semibold text-sm text-gray-700">Acciones</th>
+                    </tr>
+                </thead>
+            `;
+            const tbody = document.createElement('tbody');
+            patients.forEach(patient => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-gray-900">${patient.petName}</td>
+                    <td class="p-4 hidden md:table-cell text-gray-700">${patient.ownerName}</td>
+                    <td class="p-4 hidden sm:table-cell text-sm text-gray-600">${patient.species} ${patient.breed ? `/ ${patient.breed}` : ''}</td>
+                    <td class="p-4 hidden lg:table-cell text-sm text-gray-600">${patient.phone || 'N/A'}</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-1">
+                            <button data-id="${patient.id}" class="edit-patient-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full transition-colors" title="Editar paciente">
+                                <span class="material-icons text-lg">edit</span>
+                            </button>
+                            <button data-id="${patient.id}" class="delete-patient-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar paciente">
+                                <span class="material-icons text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            patientsList.appendChild(table);
+        };
+        const loadPatients = () => {
+            const q = query(collection(db, 'patients'), orderBy('petName'));
             onSnapshot(q, (querySnapshot) => {
-                const supplies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderSupplies(supplies);
+                allPatients = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                filteredPatients = [...allPatients];
+                renderPatients(filteredPatients);
+                updateAppointmentPatientOptions(allPatients);
+            }, (error) => {
+                console.error("Error loading patients:", error);
+                showNotification('Error al cargar pacientes', 'error');
+            });
+        };
+        // Event Listeners para Pacientes
+        document.getElementById('add-patient-btn').addEventListener('click', () => {
+            document.getElementById('patient-modal-title').textContent = 'Nuevo Paciente';
+            document.getElementById('patient-id').value = '';
+            patientForm.reset();
+            openModal('patient-modal');
+        });
+        patientForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const patientData = {
+                    petName: document.getElementById('pet-name').value.trim(),
+                    ownerName: document.getElementById('owner-name').value.trim(),
+                    species: document.getElementById('pet-species').value.trim(),
+                    breed: document.getElementById('pet-breed').value.trim(),
+                    phone: document.getElementById('contact-phone').value.trim(),
+                    createdAt: serverTimestamp()
+                };
+                const patientId = document.getElementById('patient-id').value;
+                if (patientId) {
+                    await setDoc(doc(db, 'patients', patientId), patientData);
+                    showNotification('Paciente actualizado exitosamente.');
+                } else {
+                    await addDoc(collection(db, 'patients'), patientData);
+                    showNotification('Paciente agregado exitosamente.');
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error al guardar paciente:", error);
+                showNotification('Error al guardar paciente', 'error');
+            }
+        });
+        patientsList.addEventListener('click', async e => {
+            const editBtn = e.target.closest('.edit-patient-btn');
+            const deleteBtn = e.target.closest('.delete-patient-btn');
+            if (editBtn) {
+                const id = editBtn.dataset.id;
+                const patient = allPatients.find(p => p.id === id);
+                if (patient) {
+                    document.getElementById('patient-modal-title').textContent = 'Editar Paciente';
+                    document.getElementById('patient-id').value = patient.id;
+                    document.getElementById('pet-name').value = patient.petName;
+                    document.getElementById('owner-name').value = patient.ownerName;
+                    document.getElementById('pet-species').value = patient.species;
+                    document.getElementById('pet-breed').value = patient.breed || '';
+                    document.getElementById('contact-phone').value = patient.phone || '';
+                    openModal('patient-modal');
+                }
+            } else if (deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                if (confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
+                    try {
+                        await deleteDoc(doc(db, 'patients', id));
+                        showNotification('Paciente eliminado exitosamente.');
+                    } catch (error) {
+                        console.error("Error al eliminar paciente:", error);
+                        showNotification('Error al eliminar paciente', 'error');
+                    }
+                }
+            }
+        });
+
+        // --- Lógica de Citas ---
+        const appointmentForm = document.getElementById('appointment-form');
+        const appointmentsList = document.getElementById('appointments-list');
+        const appointmentPatientSelect = document.getElementById('appointment-patient');
+        const appointmentFilterDate = document.getElementById('appointment-filter-date');
+        let allAppointments = [];
+
+        const updateAppointmentPatientOptions = (patients) => {
+            appointmentPatientSelect.innerHTML = '<option value="">Seleccione un paciente...</option>';
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = `${patient.petName} (${patient.ownerName})`;
+                appointmentPatientSelect.appendChild(option);
             });
         };
 
+        const renderAppointments = (appointments) => {
+            appointmentsList.innerHTML = '';
+            const filtered = appointments.filter(a => {
+                if (!appointmentFilterDate.value) return true;
+                const filterDate = new Date(appointmentFilterDate.value).toDateString();
+                const apptDate = a.dateTime.toDate().toDateString();
+                return filterDate === apptDate;
+            });
+            if (filtered.length === 0) {
+                const isEmpty = allAppointments.length === 0;
+                appointmentsList.innerHTML = `
+                    <p class="p-8 text-center text-gray-500">
+                        ${isEmpty ? 'No hay citas agendadas.' : 'No se encontraron citas para esa fecha.'}
+                    </p>
+                `;
+                return;
+            }
+            filtered.forEach(appointment => {
+                const patient = allPatients.find(p => p.id === appointment.patientId);
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4 mb-4';
+                div.innerHTML = `
+                    <div class="flex-shrink-0">
+                        <span class="material-icons text-green-500 text-3xl">event_note</span>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-lg font-bold text-gray-800">${patient ? patient.petName : 'Paciente Desconocido'}</h4>
+                        <p class="text-sm text-gray-600">Dueño: ${patient ? patient.ownerName : 'N/A'}</p>
+                        <p class="text-sm text-gray-600">Fecha: <span class="font-medium">${formatDate(appointment.dateTime)}</span></p>
+                        <p class="text-sm text-gray-600 mt-2">Motivo: ${appointment.reason}</p>
+                    </div>
+                    <div class="flex-shrink-0 flex space-x-2">
+                        <button data-id="${appointment.id}" class="edit-appointment-btn p-2 text-green-500 hover:bg-green-100 rounded-full transition-colors" title="Editar cita">
+                             <span class="material-icons text-lg">edit</span>
+                        </button>
+                        <button data-id="${appointment.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar cita">
+                             <span class="material-icons text-lg">delete</span>
+                        </button>
+                    </div>
+                `;
+                appointmentsList.appendChild(div);
+            });
+        };
+        
+        const loadAppointments = () => {
+            const q = query(collection(db, 'appointments'), orderBy('dateTime'));
+            onSnapshot(q, (querySnapshot) => {
+                allAppointments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAppointments(allAppointments);
+            }, (error) => {
+                console.error("Error loading appointments:", error);
+                showNotification('Error al cargar citas', 'error');
+            });
+        };
+        
+        // Event Listeners para Citas
+        document.getElementById('add-appointment-btn').addEventListener('click', () => {
+            if (allPatients.length === 0) {
+                showNotification('Primero debes agregar un paciente.', 'info');
+                return;
+            }
+            document.getElementById('appointment-modal-title').textContent = 'Nueva Cita';
+            document.getElementById('appointment-id').value = '';
+            appointmentForm.reset();
+            openModal('appointment-modal');
+        });
+        appointmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const appointmentData = {
+                patientId: document.getElementById('appointment-patient').value,
+                dateTime: new Date(document.getElementById('appointment-date').value),
+                reason: document.getElementById('appointment-reason').value.trim(),
+                createdAt: serverTimestamp()
+            };
+            const appointmentId = document.getElementById('appointment-id').value;
+            try {
+                if (appointmentId) {
+                    await setDoc(doc(db, 'appointments', appointmentId), appointmentData);
+                    showNotification('Cita actualizada exitosamente.');
+                } else {
+                    await addDoc(collection(db, 'appointments'), appointmentData);
+                    showNotification('Cita agendada exitosamente.');
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error al guardar cita:", error);
+                showNotification('Error al guardar cita', 'error');
+            }
+        });
+        appointmentFilterDate.addEventListener('change', () => {
+            renderAppointments(allAppointments);
+        });
+        appointmentsList.addEventListener('click', async e => {
+            const editBtn = e.target.closest('.edit-appointment-btn');
+            const deleteBtn = e.target.closest('.delete-appointment-btn');
+            if (editBtn) {
+                const id = editBtn.dataset.id;
+                const appointment = allAppointments.find(a => a.id === id);
+                if (appointment) {
+                    document.getElementById('appointment-modal-title').textContent = 'Editar Cita';
+                    document.getElementById('appointment-id').value = appointment.id;
+                    document.getElementById('appointment-patient').value = appointment.patientId;
+                    const date = appointment.dateTime.toDate();
+                    const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('appointment-date').value = localDateTime;
+                    document.getElementById('appointment-reason').value = appointment.reason;
+                    openModal('appointment-modal');
+                }
+            } else if (deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                if (confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
+                    try {
+                        await deleteDoc(doc(db, 'appointments', id));
+                        showNotification('Cita eliminada exitosamente.');
+                    } catch (error) {
+                        console.error("Error al eliminar cita:", error);
+                        showNotification('Error al eliminar cita', 'error');
+                    }
+                }
+            }
+        });
+
+        // --- Lógica de Chat ---
+        const userChatForm = document.getElementById('user-chat-form');
+        const openChatBtn = document.getElementById('open-chat-btn');
+        const adminChatList = document.getElementById('admin-chat-list');
+        const unreadMessagesBadge = document.getElementById('unread-messages-badge');
+
+        const loadChatMessages = () => {
+            const q = query(collection(db, 'chat'), orderBy('timestamp', 'asc'));
+            onSnapshot(q, (querySnapshot) => {
+                adminChatList.innerHTML = '';
+                let unreadCount = 0;
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isNew = data.timestamp && (Date.now() - data.timestamp.toDate().getTime() < 3600000); // New message if less than 1 hour old
+                    const div = document.createElement('div');
+                    div.className = `p-3 rounded-lg border-b last:border-b-0 ${isNew ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`;
+                    div.innerHTML = `
+                        <p class="font-bold text-gray-800">${data.name}</p>
+                        <p class="text-gray-700 mt-1 text-sm">${data.message}</p>
+                        <p class="text-xs text-gray-400 mt-1">${formatDate(data.timestamp)}</p>
+                    `;
+                    adminChatList.appendChild(div);
+                    if (isNew) unreadCount++;
+                });
+                if (unreadCount > 0) {
+                    unreadMessagesBadge.textContent = `${unreadCount} nuevos`;
+                    unreadMessagesBadge.classList.remove('hidden');
+                } else {
+                    unreadMessagesBadge.classList.add('hidden');
+                }
+                adminChatList.scrollTop = adminChatList.scrollHeight;
+            }, (error) => {
+                console.error("Error loading chat messages:", error);
+                showNotification('Error al cargar mensajes del chat', 'error');
+            });
+        };
+        openChatBtn.addEventListener('click', () => {
+            openModal('user-chat-modal');
+        });
+        userChatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('user-chat-name').value.trim();
+            const message = document.getElementById('user-chat-message').value.trim();
+            try {
+                await addDoc(collection(db, 'chat'), {
+                    name: name,
+                    message: message,
+                    timestamp: serverTimestamp()
+                });
+                showNotification('Mensaje enviado exitosamente. Un veterinario se pondrá en contacto pronto.');
+                closeModal();
+            } catch (error) {
+                console.error("Error al enviar mensaje:", error);
+                showNotification('Error al enviar mensaje', 'error');
+            }
+        });
+
+        // --- Lógica de Admin ---
+        const adminLoginForm = document.getElementById('admin-login-form');
+        adminLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            const errorMsg = document.getElementById('admin-error-msg');
+            if (password === ADMIN_PASS) {
+                isAdmin = true;
+                closeModal();
+                showNotification('Acceso de administrador concedido.');
+                const adminBtn = document.querySelector('[data-view="admin"]');
+                adminBtn.click();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        });
+
+        // --- Lógica de Insumos (Supplies) ---
+        const supplyForm = document.getElementById('supply-form');
+        const supplySubmitBtn = document.getElementById('supply-submit-btn');
+        const supplySubmitText = document.getElementById('supply-submit-text');
+        const supplySubmitSpinner = document.getElementById('supply-submit-spinner');
+        const suppliesList = document.getElementById('supplies-list');
+        
         const renderSupplies = (supplies) => {
             suppliesList.innerHTML = '';
             if (supplies.length === 0) {
-                suppliesList.innerHTML = `<p class="p-4 text-center text-gray-500">No hay insumos médicos. ¡Sube el primero!</p>`;
+                suppliesList.innerHTML = `<p class="col-span-full p-8 text-center text-gray-500">No hay insumos registrados.</p>`;
                 return;
             }
-            supplies.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
             supplies.forEach(supply => {
                 const div = document.createElement('div');
-                div.className = 'relative group bg-white rounded-md shadow-md overflow-hidden';
+                div.className = 'bg-white rounded-lg shadow-md overflow-hidden relative group transition-transform duration-300 hover:scale-105 hover:shadow-xl border border-gray-200';
                 div.innerHTML = `
-                    <img src="${supply.url}" class="w-full h-24 object-cover">
-                    <div class="p-2">
-                        <p class="font-semibold text-sm truncate">${supply.name || 'Sin nombre'}</p>
-                        <p class="text-xs text-gray-600 truncate">${supply.description || 'Sin descripción'}</p>
-                        <p class="text-sm font-bold text-teal-600 mt-1">$${supply.price.toFixed(0)}</p>
+                    <img src="${supply.url}" data-src="${supply.url}" class="w-full h-32 object-cover" alt="${supply.name}" loading="lazy">
+                    <div class="p-3">
+                        <h4 class="font-bold text-gray-800 text-sm truncate" title="${supply.name}">${supply.name}</h4>
+                        <p class="text-gray-500 text-xs mt-1 truncate" title="${supply.description}">${supply.description}</p>
+                        <p class="text-teal-600 font-bold mt-2 text-sm">$${supply.price.toLocaleString('es-CL')}</p>
                     </div>
-                    <button data-id="${supply.id}" data-path="${supply.path}" class="delete-supply-btn absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                    <button data-id="${supply.id}" data-path="${supply.path}" class="delete-supply-btn absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform hover:scale-125">
+                        <span class="material-icons text-lg">delete</span>
+                    </button>
                 `;
                 suppliesList.appendChild(div);
             });
         };
 
-        document.getElementById('supplies-list').addEventListener('click', async e => {
+        const loadSupplies = () => {
+            const q = query(collection(db, 'supplies'), orderBy('name'));
+            onSnapshot(q, (querySnapshot) => {
+                const supplies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderSupplies(supplies);
+            }, (error) => {
+                console.error("Error al cargar insumos:", error);
+                showNotification('Error al cargar insumos', 'error');
+            });
+        };
+
+        supplyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const imageFile = document.getElementById('supply-image').files[0];
+            const name = document.getElementById('supply-name').value.trim();
+            const description = document.getElementById('supply-description').value.trim();
+            const price = parseFloat(document.getElementById('supply-price').value) || 0;
+
+            if (!imageFile || !name || !description) {
+                showNotification('Por favor, completa todos los campos requeridos.', 'error');
+                return;
+            }
+
+            supplySubmitBtn.disabled = true;
+            supplySubmitText.textContent = 'Subiendo...';
+            supplySubmitSpinner.classList.remove('hidden');
+
+            try {
+                // Upload image to Firebase Storage
+                const storagePath = `supplies/${Date.now()}-${imageFile.name}`;
+                const storageRef = ref(storage, storagePath);
+                await uploadBytes(storageRef, imageFile);
+                const imageUrl = await getDownloadURL(storageRef);
+
+                // Save supply data to Firestore
+                const newSupply = {
+                    name: name,
+                    description: description,
+                    price: price,
+                    url: imageUrl,
+                    path: storagePath,
+                    createdAt: serverTimestamp()
+                };
+                await addDoc(collection(db, 'supplies'), newSupply);
+                
+                showNotification('Insumo subido exitosamente.');
+                supplyForm.reset();
+            } catch (error) {
+                console.error("Error al subir insumo:", error);
+                showNotification('Error al subir insumo', 'error');
+            } finally {
+                supplySubmitBtn.disabled = false;
+                supplySubmitText.textContent = 'Subir Insumo';
+                supplySubmitSpinner.classList.add('hidden');
+            }
+        });
+
+        suppliesList.addEventListener('click', async e => {
             const deleteBtn = e.target.closest('.delete-supply-btn');
             if (deleteBtn) {
                 const id = deleteBtn.dataset.id;
                 const path = deleteBtn.dataset.path;
-                if (confirm('¿Eliminar esta imagen de insumo?')) {
+                if (confirm('¿Eliminar este insumo? Se eliminará permanentemente.')) {
                     try {
                         await deleteObject(ref(storage, path));
                         await deleteDoc(doc(db, 'supplies', id));
+                        showNotification('Insumo eliminado exitosamente.');
                     } catch (error) {
                         console.error("Error al eliminar insumo:", error);
-                        alert("Hubo un error al eliminar la imagen.");
+                        showNotification('Hubo un error al eliminar el insumo.', 'error');
                     }
                 }
             }
         });
-        // --- Carga Inicial de Datos ---
-        function loadAllData() {
-            loadPatients();
-            loadAppointments();
-            loadChatMessages();
-            loadSupplies();
-        }
 
-    </script>
+        // --- Carga Inicial de Datos ---
+        async function loadAllData() {
+            try {
+                await Promise.all([
+                    loadPatients(),
+                    loadAppointments(),
+                    loadChatMessages(),
+                    loadSupplies(),
+                    loadDashboardData()
+                ]);
+                document.querySelector('[data-view="dashboard"]').click();
+            } catch (error) {
+                console.error("Error loading application data:", error);
+                showNotification('Error al cargar los datos de la aplicación', 'error');
+            }
+        };
+
+        // --- Service Worker for offline functionality (optional) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Uncomment to enable service worker
+                // navigator.serviceWorker.register('/sw.js')
+                //     .then(registration => console.log('SW registered:', registration))
+                //     .catch(error => console.log('SW registration failed:', error));
+            });
+        }
+
+        // --- Online/Offline status ---
+        window.addEventListener('online', () => {
+            showNotification('Conexión restaurada', 'info');
+        });
+
+        window.addEventListener('offline', () => {
+            showNotification('Sin conexión a internet', 'error');
+        });
+
+        // --- Initialize app ---
+        console.log('🐾 Patitas Salvajes - Sistema de gestión veterinaria inicializado');
+
+    </script>
 </body>
 </html>
