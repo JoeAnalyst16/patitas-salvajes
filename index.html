@@ -858,6 +858,8 @@
                 const apptDate = a.dateTime.toDate().toDateString();
                 return filterDate === apptDate;
             });
+            filtered.sort((a, b) => a.dateTime.toDate() - b.dateTime.toDate());
+
             if (filtered.length === 0) {
                 const isEmpty = allAppointments.length === 0;
                 appointmentsList.innerHTML = `
@@ -926,14 +928,24 @@
         });
         appointmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const patientId = document.getElementById('appointment-patient').value;
+            const dateTime = document.getElementById('appointment-date').value;
+            const reason = document.getElementById('appointment-reason').value.trim();
+            const appointmentId = document.getElementById('appointment-id').value;
+            
+            if (!patientId || !dateTime || !reason) {
+                 showNotification('Por favor, completa todos los campos requeridos.', 'error');
+                 return;
+            }
+
             const appointmentData = {
-                patientId: document.getElementById('appointment-patient').value,
-                dateTime: new Date(document.getElementById('appointment-date').value),
-                reason: document.getElementById('appointment-reason').value.trim(),
-                status: 'pending', // Nuevo campo de estado
+                patientId: patientId,
+                dateTime: new Date(dateTime),
+                reason: reason,
+                status: 'pending',
                 createdAt: serverTimestamp()
             };
-            const appointmentId = document.getElementById('appointment-id').value;
+
             try {
                 if (appointmentId) {
                     await setDoc(doc(db, 'appointments', appointmentId), appointmentData);
@@ -948,6 +960,7 @@
                 showNotification('Error al guardar cita', 'error');
             }
         });
+
         appointmentFilterDate.addEventListener('change', () => {
             renderAppointments(allAppointments);
         });
