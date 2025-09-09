@@ -389,6 +389,13 @@
                            required>
                 </div>
                 <div class="mt-4">
+                    <label for="user-chat-phone" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tu Teléfono (opcional)
+                    </label>
+                    <input type="tel" id="user-chat-phone" placeholder="+56 9 XXXX XXXX"
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition-colors">
+                </div>
+                <div class="mt-4">
                     <label for="user-chat-message" class="block text-sm font-medium text-gray-700 mb-1">
                         Tu Mensaje <span class="text-red-500">*</span>
                     </label>
@@ -716,9 +723,11 @@
                             <button data-id="${patient.id}" class="edit-patient-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full transition-colors" title="Editar paciente">
                                 <span class="material-icons text-lg">edit</span>
                             </button>
+                            ${isAdmin ? `
                             <button data-id="${patient.id}" class="delete-patient-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar paciente">
                                 <span class="material-icons text-lg">delete</span>
                             </button>
+                            ` : ''}
                         </div>
                     </td>
                 `;
@@ -790,7 +799,8 @@
                 }
             } else if (deleteBtn) {
                 const id = deleteBtn.dataset.id;
-                if (confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
+                // Solo permite la eliminación si es administrador
+                if (isAdmin && confirm('¿Estás seguro de que quieres eliminar este paciente?')) {
                     try {
                         await deleteDoc(doc(db, 'patients', id));
                         showNotification('Paciente eliminado exitosamente.');
@@ -959,6 +969,7 @@
                     div.className = `p-3 rounded-lg border-b last:border-b-0 ${isNew ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`;
                     div.innerHTML = `
                         <p class="font-bold text-gray-800">${data.name}</p>
+                        ${data.phone ? `<p class="text-xs text-gray-500 mt-1">Teléfono: ${data.phone}</p>` : ''}
                         <p class="text-gray-700 mt-1 text-sm">${data.message}</p>
                         <p class="text-xs text-gray-400 mt-1">${formatDate(data.timestamp)}</p>
                     `;
@@ -984,9 +995,11 @@
             e.preventDefault();
             const name = document.getElementById('user-chat-name').value.trim();
             const message = document.getElementById('user-chat-message').value.trim();
+            const phone = document.getElementById('user-chat-phone').value.trim();
             try {
                 await addDoc(collection(db, 'chat'), {
                     name: name,
+                    phone: phone, // Guardamos el número de teléfono
                     message: message,
                     timestamp: serverTimestamp()
                 });
@@ -1044,9 +1057,11 @@
                         <p class="text-gray-500 text-xs mt-1 truncate" title="${supply.description}">${supply.description}</p>
                         <p class="text-teal-600 font-bold mt-2 text-sm">$${supply.price.toLocaleString('es-CL')}</p>
                     </div>
+                    ${isAdmin ? `
                     <button data-id="${supply.id}" data-path="${supply.path}" class="delete-supply-btn absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform hover:scale-125">
                         <span class="material-icons text-lg">delete</span>
                     </button>
+                    ` : ''}
                 `;
                 suppliesList.appendChild(div);
             });
@@ -1072,6 +1087,13 @@
 
             if (!imageFile || !name || !description) {
                 showNotification('Por favor, completa todos los campos requeridos.', 'error');
+                return;
+            }
+            
+            // Verificación del tamaño del archivo (5 MB máximo)
+            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+            if (imageFile.size > MAX_FILE_SIZE) {
+                showNotification('El archivo es demasiado grande. El tamaño máximo es de 5 MB.', 'error');
                 return;
             }
 
@@ -1111,7 +1133,7 @@
 
         suppliesList.addEventListener('click', async e => {
             const deleteBtn = e.target.closest('.delete-supply-btn');
-            if (deleteBtn) {
+            if (deleteBtn && isAdmin) {
                 const id = deleteBtn.dataset.id;
                 const path = deleteBtn.dataset.path;
                 if (confirm('¿Eliminar este insumo? Se eliminará permanentemente.')) {
