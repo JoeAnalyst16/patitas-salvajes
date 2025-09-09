@@ -51,15 +51,15 @@
     <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <header class="bg-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
+        <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2 md:space-x-4">
                 <img src="https://github.com/JoeAnalyst16/Projects/blob/main/PATITAS%20SALVAJES%20EDITABLE-02.png?raw=true" 
                      alt="Logo Patitas Salvajes" 
-                     class="h-16 w-auto"
+                     class="h-12 md:h-16 w-auto"
                      onerror="this.style.display='none'">
-                <h1 class="text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
+                <h1 class="text-xl md:text-2xl font-bold text-teal-600 hidden sm:block">Patitas Salvajes</h1>
             </div>
-            <div id="auth-status" class="text-sm text-gray-500 font-semibold flex items-center space-x-2">
+            <div id="auth-status" class="text-xs md:text-sm text-gray-500 font-semibold flex items-center space-x-2">
                 <div class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
                 <span>Conectando...</span>
             </div>
@@ -70,48 +70,55 @@
         
         <nav class="bg-white p-2 rounded-lg shadow-md mb-6 flex justify-center flex-wrap gap-2">
             <button data-view="dashboard" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition-all duration-200 flex items-center transform hover:scale-105">
-                <span class="material-icons text-lg mr-2">dashboard</span> Dashboard
+                <span class="material-icons text-lg mr-1 sm:mr-2">dashboard</span> Dashboard
             </button>
             <button data-view="patients" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
-                <span class="material-icons text-lg mr-2">group</span> Pacientes
+                <span class="material-icons text-lg mr-1 sm:mr-2">group</span> Pacientes
             </button>
             <button data-view="appointments" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
-                 <span class="material-icons text-lg mr-2">event</span> Citas
+                 <span class="material-icons text-lg mr-1 sm:mr-2">event</span> Citas
             </button>
             <button data-view="admin" class="nav-btn px-3 py-2 rounded-md text-sm md:text-base font-semibold text-gray-700 hover:bg-gray-200 transition-all duration-200 flex items-center transform hover:scale-105">
-                <span class="material-icons text-lg mr-2">admin_panel_settings</span> Admin
+                <span class="material-icons text-lg mr-1 sm:mr-2">admin_panel_settings</span> Admin
             </button>
         </nav>
 
         <div id="views-container">
             <div id="dashboard-view" class="view-content">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Bienvenido a Patitas Salvajes 🐾</h2>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Bienvenido a Patitas Salvajes 🐾</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
                         <div>
                             <p class="text-sm text-gray-500 font-semibold uppercase">Total Pacientes</p>
-                            <h3 id="patient-count" class="text-4xl font-extrabold text-blue-600 mt-1">...</h3>
+                            <h3 id="patient-count" class="text-3xl md:text-4xl font-extrabold text-blue-600 mt-1">...</h3>
                         </div>
-                        <span class="material-icons text-5xl text-blue-300">pets</span>
+                        <span class="material-icons text-4xl md:text-5xl text-blue-300">pets</span>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
                         <div>
                             <p class="text-sm text-gray-500 font-semibold uppercase">Citas Pendientes</p>
-                            <h3 id="appointment-count" class="text-4xl font-extrabold text-green-600 mt-1">...</h3>
+                            <h3 id="appointment-pending-count" class="text-3xl md:text-4xl font-extrabold text-orange-600 mt-1">...</h3>
                         </div>
-                        <span class="material-icons text-5xl text-green-300">schedule</span>
+                        <span class="material-icons text-4xl md:text-5xl text-orange-300">schedule</span>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
+                        <div>
+                            <p class="text-sm text-gray-500 font-semibold uppercase">Citas Aceptadas</p>
+                            <h3 id="appointment-accepted-count" class="text-3xl md:text-4xl font-extrabold text-green-600 mt-1">...</h3>
+                        </div>
+                        <span class="material-icons text-4xl md:text-5xl text-green-300">done_all</span>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center justify-between transition-transform duration-300 hover:scale-105">
                         <div>
                             <p class="text-sm text-gray-500 font-semibold uppercase">Insumos Médicos</p>
-                            <h3 id="supply-count" class="text-4xl font-extrabold text-purple-600 mt-1">...</h3>
+                            <h3 id="supply-count" class="text-3xl md:text-4xl font-extrabold text-purple-600 mt-1">...</h3>
                         </div>
-                        <span class="material-icons text-5xl text-purple-300">medical_services</span>
+                        <span class="material-icons text-4xl md:text-5xl text-purple-300">medical_services</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">Citas Próximas</h3>
                         <div id="upcoming-appointments-list" class="space-y-4">
@@ -129,7 +136,7 @@
 
             <div id="patients-view" class="view-content hidden">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
-                    <h2 class="text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-700">Registro de Pacientes</h2>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <div class="relative">
                             <input type="text" id="patient-search" placeholder="Buscar pacientes..." 
@@ -148,7 +155,7 @@
 
             <div id="appointments-view" class="view-content hidden">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
-                    <h2 class="text-2xl font-bold text-gray-700">Agenda de Citas</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-700">Agenda de Citas</h2>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <div class="relative">
                             <input type="date" id="appointment-filter-date" 
@@ -165,19 +172,25 @@
             </div>
 
             <div id="admin-view" class="view-content hidden">
-                <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Panel de Administración</h2>
+                <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4 gap-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-700">Panel de Administración</h2>
                     <button id="logout-admin-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600 transition-all duration-200 font-semibold flex items-center justify-center transform hover:scale-105">
                         <span class="material-icons text-lg mr-2">logout</span> Salir
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-lg font-bold">Chat Veterinario</h3>
-                            <div id="unread-messages-badge" class="hidden bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                                0 nuevos
+                            <div class="flex items-center space-x-2">
+                                <button id="download-chat-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-xs hover:bg-gray-300 transition-colors">
+                                    <span class="material-icons text-sm mr-1">download</span>
+                                    Descargar
+                                </button>
+                                <div id="unread-messages-badge" class="hidden bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                    0 nuevos
+                                </div>
                             </div>
                         </div>
                         <div id="admin-chat-list" class="h-96 overflow-y-auto space-y-3 p-2 border rounded-md bg-gray-50">
@@ -251,12 +264,12 @@
                 </a>
             </div>
         </div>
-        <p class="mt-8 pt-6 border-t border-gray-200 text-center">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
+        <p class="mt-8 pt-6 border-t border-gray-200 text-center text-xs md:text-sm">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
       </div>
     </footer>
 
     <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4 max-h-screen overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4 max-h-screen overflow-y-auto">
             <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
             <form id="patient-form">
                 <input type="hidden" id="patient-id">
@@ -309,10 +322,9 @@
     </div>
 
     <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4 max-h-screen overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4 max-h-screen overflow-y-auto">
             <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
             <form id="appointment-form">
-                <input type="hidden" id="appointment-id">
                 <div>
                     <label for="appointment-patient" class="block text-sm font-medium text-gray-700 mb-1">
                         Paciente <span class="text-red-500">*</span>
@@ -352,7 +364,7 @@
     </div>
 
     <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm m-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-sm m-4">
             <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
             <form id="admin-login-form">
                 <div>
@@ -377,7 +389,7 @@
     </div>
 
     <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg m-4">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4">
             <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
             <form id="user-chat-form">
                 <div>
@@ -576,14 +588,16 @@
         // --- Lógica de Dashboard ---
         const loadDashboardData = async () => {
             const patientCountEl = document.getElementById('patient-count');
-            const appointmentCountEl = document.getElementById('appointment-count');
+            const appointmentPendingCountEl = document.getElementById('appointment-pending-count');
+            const appointmentAcceptedCountEl = document.getElementById('appointment-accepted-count');
             const supplyCountEl = document.getElementById('supply-count');
             const upcomingAppointmentsList = document.getElementById('upcoming-appointments-list');
             const recentPatientsList = document.getElementById('recent-patients-list');
 
             // Reset dashboard content
             patientCountEl.textContent = '...';
-            appointmentCountEl.textContent = '...';
+            appointmentPendingCountEl.textContent = '...';
+            appointmentAcceptedCountEl.textContent = '...';
             supplyCountEl.textContent = '...';
             upcomingAppointmentsList.innerHTML = `<div class="loading-skeleton h-20 w-full rounded-lg"></div>`;
             recentPatientsList.innerHTML = `<div class="loading-skeleton h-20 w-full rounded-lg"></div>`;
@@ -593,17 +607,20 @@
                 const patientSnapshot = await getCountFromServer(collection(db, 'patients'));
                 patientCountEl.textContent = patientSnapshot.data().count;
 
-                const appointmentSnapshot = await getCountFromServer(collection(db, 'appointments'));
-                appointmentCountEl.textContent = appointmentSnapshot.data().count;
+                const pendingSnapshot = await getCountFromServer(query(collection(db, 'appointments'), where('status', '!=', 'accepted')));
+                appointmentPendingCountEl.textContent = pendingSnapshot.data().count;
+
+                const acceptedSnapshot = await getCountFromServer(query(collection(db, 'appointments'), where('status', '==', 'accepted')));
+                appointmentAcceptedCountEl.textContent = acceptedSnapshot.data().count;
 
                 const supplySnapshot = await getCountFromServer(collection(db, 'supplies'));
                 supplyCountEl.textContent = supplySnapshot.data().count;
 
-                // Get upcoming appointments (within next 7 days)
+                // Get upcoming appointments (within next 7 days, excluding accepted)
                 const now = new Date();
                 const sevenDaysFromNow = new Date();
                 sevenDaysFromNow.setDate(now.getDate() + 7);
-                const qAppointments = query(collection(db, 'appointments'), where('dateTime', '>=', now), where('dateTime', '<=', sevenDaysFromNow), orderBy('dateTime'), limit(5));
+                const qAppointments = query(collection(db, 'appointments'), where('dateTime', '>=', now), where('dateTime', '<=', sevenDaysFromNow), where('status', '!=', 'accepted'), orderBy('dateTime'), limit(5));
                 onSnapshot(qAppointments, (querySnapshot) => {
                     upcomingAppointmentsList.innerHTML = '';
                     if (querySnapshot.empty) {
@@ -852,16 +869,24 @@
                 div.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4 mb-4';
                 div.innerHTML = `
                     <div class="flex-shrink-0">
-                        <span class="material-icons text-green-500 text-3xl">event_note</span>
+                        <span class="material-icons text-3xl ${appointment.status === 'accepted' ? 'text-green-500' : 'text-orange-500'}">event_note</span>
                     </div>
                     <div class="flex-1">
                         <h4 class="text-lg font-bold text-gray-800">${patient ? patient.petName : 'Paciente Desconocido'}</h4>
                         <p class="text-sm text-gray-600">Dueño: ${patient ? patient.ownerName : 'N/A'}</p>
                         <p class="text-sm text-gray-600">Fecha: <span class="font-medium">${formatDate(appointment.dateTime)}</span></p>
                         <p class="text-sm text-gray-600 mt-2">Motivo: ${appointment.reason}</p>
+                        <span class="inline-block mt-2 px-2 py-1 text-xs rounded-full font-semibold ${appointment.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
+                            ${appointment.status === 'accepted' ? 'Aceptada' : 'Pendiente'}
+                        </span>
                     </div>
                     <div class="flex-shrink-0 flex space-x-2">
-                        <button data-id="${appointment.id}" class="edit-appointment-btn p-2 text-green-500 hover:bg-green-100 rounded-full transition-colors" title="Editar cita">
+                         ${appointment.status !== 'accepted' && isAdmin ? `
+                            <button data-id="${appointment.id}" class="accept-appointment-btn p-2 text-green-500 hover:bg-green-100 rounded-full transition-colors" title="Aceptar cita">
+                                <span class="material-icons text-lg">done_all</span>
+                            </button>
+                        ` : ''}
+                        <button data-id="${appointment.id}" class="edit-appointment-btn p-2 text-blue-500 hover:bg-blue-100 rounded-full transition-colors" title="Editar cita">
                              <span class="material-icons text-lg">edit</span>
                         </button>
                         <button data-id="${appointment.id}" class="delete-appointment-btn p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors" title="Eliminar cita">
@@ -901,6 +926,7 @@
                 patientId: document.getElementById('appointment-patient').value,
                 dateTime: new Date(document.getElementById('appointment-date').value),
                 reason: document.getElementById('appointment-reason').value.trim(),
+                status: 'pending', // Nuevo campo de estado
                 createdAt: serverTimestamp()
             };
             const appointmentId = document.getElementById('appointment-id').value;
@@ -922,9 +948,21 @@
             renderAppointments(allAppointments);
         });
         appointmentsList.addEventListener('click', async e => {
+            const acceptBtn = e.target.closest('.accept-appointment-btn');
             const editBtn = e.target.closest('.edit-appointment-btn');
             const deleteBtn = e.target.closest('.delete-appointment-btn');
-            if (editBtn) {
+            if (acceptBtn && isAdmin) {
+                const id = acceptBtn.dataset.id;
+                 if (confirm('¿Estás seguro de que quieres aceptar esta cita?')) {
+                     try {
+                        await setDoc(doc(db, 'appointments', id), { status: 'accepted' }, { merge: true });
+                        showNotification('Cita aceptada exitosamente.', 'success');
+                    } catch (error) {
+                        console.error("Error al aceptar cita:", error);
+                        showNotification('Error al aceptar la cita', 'error');
+                    }
+                 }
+            } else if (editBtn) {
                 const id = editBtn.dataset.id;
                 const appointment = allAppointments.find(a => a.id === id);
                 if (appointment) {
@@ -956,6 +994,7 @@
         const openChatBtn = document.getElementById('open-chat-btn');
         const adminChatList = document.getElementById('admin-chat-list');
         const unreadMessagesBadge = document.getElementById('unread-messages-badge');
+        const downloadChatBtn = document.getElementById('download-chat-btn');
 
         const loadChatMessages = () => {
             const q = query(collection(db, 'chat'), orderBy('timestamp', 'asc'));
@@ -968,7 +1007,14 @@
                     const div = document.createElement('div');
                     div.className = `p-3 rounded-lg border-b last:border-b-0 ${isNew ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`;
                     div.innerHTML = `
-                        <p class="font-bold text-gray-800">${data.name}</p>
+                        <div class="flex justify-between items-center">
+                            <p class="font-bold text-gray-800">${data.name}</p>
+                            ${isAdmin ? `
+                                <button data-id="${doc.id}" class="delete-chat-btn text-red-500 hover:text-red-700 transition-colors" title="Eliminar mensaje">
+                                    <span class="material-icons text-sm">delete</span>
+                                </button>
+                            ` : ''}
+                        </div>
                         ${data.phone ? `<p class="text-xs text-gray-500 mt-1">Teléfono: ${data.phone}</p>` : ''}
                         <p class="text-gray-700 mt-1 text-sm">${data.message}</p>
                         <p class="text-xs text-gray-400 mt-1">${formatDate(data.timestamp)}</p>
@@ -1010,6 +1056,54 @@
                 showNotification('Error al enviar mensaje', 'error');
             }
         });
+
+        // Delete chat message logic
+        adminChatList.addEventListener('click', async e => {
+            const deleteBtn = e.target.closest('.delete-chat-btn');
+            if (deleteBtn && isAdmin) {
+                const id = deleteBtn.dataset.id;
+                if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+                    try {
+                        await deleteDoc(doc(db, 'chat', id));
+                        showNotification('Mensaje eliminado exitosamente.', 'info');
+                    } catch (error) {
+                        console.error("Error al eliminar mensaje:", error);
+                        showNotification('Hubo un error al eliminar el mensaje.', 'error');
+                    }
+                }
+            }
+        });
+
+        // Download chat as CSV
+        const downloadChatAsCsv = async () => {
+            try {
+                const snapshot = await getDocs(query(collection(db, 'chat'), orderBy('timestamp', 'desc')));
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Nombre,Telefono,Mensaje,Fecha\n";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const name = `"${data.name.replace(/"/g, '""')}"`;
+                    const phone = `"${data.phone?.replace(/"/g, '""') || ''}"`;
+                    const message = `"${data.message.replace(/"/g, '""')}"`;
+                    const date = `"${formatDate(data.timestamp)}"`;
+                    csvContent += `${name},${phone},${message},${date}\n`;
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `chat_mensajes_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification('Descarga de mensajes iniciada.', 'info');
+            } catch (error) {
+                console.error("Error al descargar chat:", error);
+                showNotification('Error al descargar el archivo de chat', 'error');
+            }
+        };
+
+        downloadChatBtn.addEventListener('click', downloadChatAsCsv);
 
         // --- Lógica de Admin ---
         const adminLoginForm = document.getElementById('admin-login-form');
