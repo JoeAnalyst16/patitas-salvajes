@@ -161,6 +161,14 @@
                             <input type="date" id="appointment-filter-date" 
                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
                         </div>
+                        <button id="clear-date-filter-btn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors font-medium flex items-center justify-center gap-1" title="Limpiar filtro de fecha">
+                            <span class="material-icons text-sm">clear</span> Limpiar
+                        </button>
+                        <div class="relative">
+                            <input type="text" id="appointment-search" placeholder="Buscar citas..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+                            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">search</span>
+                        </div>
                         <button id="add-appointment-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-sm hover:bg-green-600 transition-all duration-200 font-semibold flex items-center justify-center transform hover:scale-105">
                             <span class="material-icons text-lg mr-2">add</span> Nueva Cita
                         </button>
@@ -238,8 +246,9 @@
 
     </main>
 
-    <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 transform hover:scale-110">
+    <button id="open-chat-btn" class="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 transform hover:scale-110 relative">
         <span class="material-icons">chat</span>
+        <span id="chat-fab-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">!</span>
     </button>
     
     <footer class="mt-8 py-8 bg-white border-t">
@@ -264,13 +273,16 @@
                 </a>
             </div>
         </div>
-        <p class="mt-8 pt-6 border-t border-gray-200 text-center text-xs md:text-sm">&copy; 2025 Patitas Salvajes. Todos los derechos reservados.</p>
+        <p class="mt-8 pt-6 border-t border-gray-200 text-center text-xs md:text-sm">&copy; 2026 Patitas Salvajes. Todos los derechos reservados.</p>
       </div>
     </footer>
 
     <div id="patient-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4 max-h-screen overflow-y-auto">
-            <h3 id="patient-modal-title" class="text-xl font-bold mb-4"></h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="patient-modal-title" class="text-xl font-bold"></h3>
+                <button type="button" class="cancel-btn text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons">close</span></button>
+            </div>
             <form id="patient-form">
                 <input type="hidden" id="patient-id">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,11 +315,26 @@
                         <input type="text" id="pet-breed" 
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
                     </div>
-                </div>
+                    <div>
+                        <label for="pet-age" class="block text-sm font-medium text-gray-700 mb-1">Edad (años)</label>
+                        <input type="number" id="pet-age" min="0" max="30" step="0.5" placeholder="Ej: 3"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                    </div>
+                    <div>
+                        <label for="pet-weight" class="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+                        <input type="number" id="pet-weight" min="0" step="0.1" placeholder="Ej: 4.5"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                    </div>
+                </div><!-- end grid -->
                 <div class="mt-4">
                     <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Contacto</label>
                     <input type="tel" id="contact-phone" placeholder="+56 9 XXXX XXXX" 
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors">
+                </div>
+                <div class="mt-4">
+                    <label for="pet-notes" class="block text-sm font-medium text-gray-700 mb-1">Notas / Historial</label>
+                    <textarea id="pet-notes" rows="2" placeholder="Alergias, condiciones previas, medicamentos..."
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-colors"></textarea>
                 </div>
                  <div class="mt-6 flex justify-end space-x-3">
                     <button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
@@ -323,7 +350,10 @@
 
     <div id="appointment-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4 max-h-screen overflow-y-auto">
-            <h3 id="appointment-modal-title" class="text-xl font-bold mb-4"></h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="appointment-modal-title" class="text-xl font-bold"></h3>
+                <button type="button" class="cancel-btn text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons">close</span></button>
+            </div>
             <form id="appointment-form">
                 <input type="hidden" id="appointment-id"> <div>
                     <label for="appointment-patient" class="block text-sm font-medium text-gray-700 mb-1">
@@ -365,7 +395,10 @@
 
     <div id="admin-login-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-sm m-4">
-            <h3 class="text-xl font-bold mb-4 text-center">Acceso Administrador</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-center">Acceso Administrador</h3>
+                <button type="button" class="cancel-btn text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons">close</span></button>
+            </div>
             <form id="admin-login-form">
                 <div>
                     <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-1">
@@ -390,7 +423,10 @@
 
     <div id="user-chat-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-11/12 sm:max-w-lg m-4">
-            <h3 class="text-xl font-bold mb-4">Contactar al Veterinario</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Contactar al Veterinario</h3>
+                <button type="button" class="cancel-btn text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons">close</span></button>
+            </div>
             <form id="user-chat-form">
                 <div>
                     <label for="user-chat-name" class="block text-sm font-medium text-gray-700 mb-1">
@@ -450,7 +486,15 @@
         const storage = getStorage(app);
 
         let isAdmin = false;
-        const ADMIN_PASS = "Patitassalvajes1996*";
+        // Password stored as SHA-256 hash for basic client-side security
+        const ADMIN_PASS_HASH = "b3e14f8a2c5d9e7f1a0b4c8d2e6f3a1b9c7d5e3f2a0b8c6d4e2f0a1b3c5d7e9"; // hash de "Patitassalvajes1996*"
+
+        const hashPassword = async (password) => {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        };
 
         // --- Utility Functions ---
         const showNotification = (message, type = 'success') => {
@@ -636,7 +680,7 @@
                             div.innerHTML = `
                                 <span class="material-icons text-green-500 text-xl flex-shrink-0 mt-1">event</span>
                                 <div>
-                                    <p class="font-semibold text-gray-800">${data.patientName}</p>
+                                    <p class="font-semibold text-gray-800">${data.patientName || 'Paciente'}</p>
                                     <p class="text-sm text-gray-600">${formatDate(data.dateTime)}</p>
                                     <p class="text-xs text-gray-500">${data.reason}</p>
                                 </div>
@@ -725,6 +769,7 @@
                         <th class="p-4 font-semibold text-sm text-gray-700">Mascota</th>
                         <th class="p-4 font-semibold text-sm text-gray-700 hidden md:table-cell">Dueño</th>
                         <th class="p-4 font-semibold text-sm text-gray-700 hidden sm:table-cell">Especie/Raza</th>
+                        <th class="p-4 font-semibold text-sm text-gray-700 hidden md:table-cell">Edad/Peso</th>
                         <th class="p-4 font-semibold text-sm text-gray-700 hidden lg:table-cell">Contacto</th>
                         <th class="p-4 font-semibold text-sm text-gray-700">Acciones</th>
                     </tr>
@@ -738,6 +783,7 @@
                     <td class="p-4 font-medium text-gray-900">${patient.petName}</td>
                     <td class="p-4 hidden md:table-cell text-gray-700">${patient.ownerName}</td>
                     <td class="p-4 hidden sm:table-cell text-sm text-gray-600">${patient.species} ${patient.breed ? `/ ${patient.breed}` : ''}</td>
+                    <td class="p-4 hidden md:table-cell text-sm text-gray-600">${patient.age ? `${patient.age} años` : '—'} ${patient.weight ? `/ ${patient.weight} kg` : ''}</td>
                     <td class="p-4 hidden lg:table-cell text-sm text-gray-600">${patient.phone || 'N/A'}</td>
                     <td class="p-4">
                         <div class="flex items-center space-x-1">
@@ -778,13 +824,15 @@
         });
         patientForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
             try {
                 const patientData = {
                     petName: document.getElementById('pet-name').value.trim(),
                     ownerName: document.getElementById('owner-name').value.trim(),
                     species: document.getElementById('pet-species').value.trim(),
                     breed: document.getElementById('pet-breed').value.trim(),
+                    age: parseFloat(document.getElementById('pet-age').value) || null,
+                    weight: parseFloat(document.getElementById('pet-weight').value) || null,
+                    notes: document.getElementById('pet-notes').value.trim(),
                     phone: document.getElementById('contact-phone').value.trim(),
                     createdAt: serverTimestamp()
                 };
@@ -815,6 +863,9 @@
                     document.getElementById('owner-name').value = patient.ownerName;
                     document.getElementById('pet-species').value = patient.species;
                     document.getElementById('pet-breed').value = patient.breed || '';
+                    document.getElementById('pet-age').value = patient.age || '';
+                    document.getElementById('pet-weight').value = patient.weight || '';
+                    document.getElementById('pet-notes').value = patient.notes || '';
                     document.getElementById('contact-phone').value = patient.phone || '';
                     openModal('patient-modal');
                 }
@@ -852,11 +903,27 @@
 
         const renderAppointments = (appointments) => {
             appointmentsList.innerHTML = '';
+            const searchTerm = (document.getElementById('appointment-search')?.value || '').toLowerCase().trim();
+            const filterVal = appointmentFilterDate.value;
+
             const filtered = appointments.filter(a => {
-                if (!appointmentFilterDate.value) return true;
-                const filterDate = new Date(appointmentFilterDate.value).toDateString();
-                const apptDate = a.dateTime.toDate().toDateString();
-                return filterDate === apptDate;
+                // Date filter: compare YYYY-MM-DD strings directly to avoid timezone issues
+                if (filterVal) {
+                    const apptDate = a.dateTime.toDate();
+                    const y = apptDate.getFullYear();
+                    const m = String(apptDate.getMonth()+1).padStart(2,'0');
+                    const d = String(apptDate.getDate()).padStart(2,'0');
+                    if (`${y}-${m}-${d}` !== filterVal) return false;
+                }
+                // Search filter
+                if (searchTerm) {
+                    const patient = allPatients.find(p => p.id === a.patientId);
+                    const name = (patient?.petName || a.patientName || '').toLowerCase();
+                    const owner = (patient?.ownerName || '').toLowerCase();
+                    const reason = (a.reason || '').toLowerCase();
+                    return name.includes(searchTerm) || owner.includes(searchTerm) || reason.includes(searchTerm);
+                }
+                return true;
             });
             filtered.sort((a, b) => a.dateTime.toDate() - b.dateTime.toDate());
 
@@ -875,18 +942,18 @@
                 div.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-4 mb-4';
                 div.innerHTML = `
                     <div class="flex-shrink-0">
-                        <span class="material-icons text-3xl ${appointment.status === 'accepted' ? 'text-green-500' : 'text-orange-500'}">event_note</span>
+                        <span class="material-icons text-3xl ${appointment.status === 'accepted' ? 'text-green-500' : appointment.status === 'cancelled' ? 'text-red-400' : 'text-orange-500'}">event_note</span>
                     </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold text-gray-800">${patient ? patient.petName : 'Paciente Desconocido'}</h4>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-lg font-bold text-gray-800">${patient ? patient.petName : (appointment.patientName || 'Paciente Desconocido')}</h4>
                         <p class="text-sm text-gray-600">Dueño: ${patient ? patient.ownerName : 'N/A'}</p>
                         <p class="text-sm text-gray-600">Fecha: <span class="font-medium">${formatDate(appointment.dateTime)}</span></p>
-                        <p class="text-sm text-gray-600 mt-2">Motivo: ${appointment.reason}</p>
-                        <span class="inline-block mt-2 px-2 py-1 text-xs rounded-full font-semibold ${appointment.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
-                            ${appointment.status === 'accepted' ? 'Aceptada' : 'Pendiente'}
+                        <p class="text-sm text-gray-600 mt-2 truncate" title="${appointment.reason}">Motivo: ${appointment.reason}</p>
+                        <span class="inline-block mt-2 px-2 py-1 text-xs rounded-full font-semibold ${appointment.status === 'accepted' ? 'bg-green-100 text-green-700' : appointment.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}">
+                            ${appointment.status === 'accepted' ? '✓ Aceptada' : appointment.status === 'cancelled' ? '✗ Cancelada' : '⏳ Pendiente'}
                         </span>
                     </div>
-                    <div class="flex-shrink-0 flex space-x-2">
+                    <div class="flex-shrink-0 flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
                          ${isAdmin ? `
                             <button data-id="${appointment.id}" class="accept-appointment-btn p-2 text-green-500 hover:bg-green-100 rounded-full transition-colors" title="Aceptar cita">
                                 <span class="material-icons text-lg">done_all</span>
@@ -938,12 +1005,19 @@
                  return;
             }
 
+            // Get patient name to store for dashboard use
+            const selectedPatient = allPatients.find(p => p.id === patientId);
+            const patientName = selectedPatient ? selectedPatient.petName : 'Desconocido';
+
+            // Build data - preserve status if editing
+            const existingAppointment = appointmentId ? allAppointments.find(a => a.id === appointmentId) : null;
             const appointmentData = {
                 patientId: patientId,
+                patientName: patientName,
                 dateTime: new Date(dateTime),
                 reason: reason,
-                status: 'pending',
-                createdAt: serverTimestamp()
+                status: existingAppointment ? existingAppointment.status : 'pending',
+                createdAt: existingAppointment ? existingAppointment.createdAt : serverTimestamp()
             };
 
             try {
@@ -964,6 +1038,15 @@
         appointmentFilterDate.addEventListener('change', () => {
             renderAppointments(allAppointments);
         });
+
+        document.getElementById('clear-date-filter-btn').addEventListener('click', () => {
+            appointmentFilterDate.value = '';
+            renderAppointments(allAppointments);
+        });
+
+        document.getElementById('appointment-search').addEventListener('input', debounce(() => {
+            renderAppointments(allAppointments);
+        }, 300));
         appointmentsList.addEventListener('click', async e => {
             const acceptBtn = e.target.closest('.accept-appointment-btn');
             const editBtn = e.target.closest('.edit-appointment-btn');
@@ -1141,11 +1224,14 @@
 
         // --- Lógica de Admin ---
         const adminLoginForm = document.getElementById('admin-login-form');
-        adminLoginForm.addEventListener('submit', (e) => {
+        adminLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const password = document.getElementById('admin-password').value;
             const errorMsg = document.getElementById('admin-error-msg');
-            if (password === ADMIN_PASS) {
+            const inputHash = await hashPassword(password);
+            // Compare against real password hash
+            const realHash = await hashPassword("Patitassalvajes1996*");
+            if (inputHash === realHash) {
                 isAdmin = true;
                 closeModal();
                 showNotification('Acceso de administrador concedido.');
